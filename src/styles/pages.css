@@ -1,0 +1,104 @@
+/* One subject per movement. The resting document is the full composition. */
+:focus-visible { outline-width: 2px; }
+[id] { scroll-margin-top: calc(var(--nav-height) + 2rem); }
+.nav, .nav[data-scrolled='true'] { background-color: var(--sumi-void); }
+.nav { gap: 1rem; }
+.nav__link, .nav__bag, .nav__motion, .chip, .field__label, .spec__key, .skip-link { font-size: 0.875rem; }
+.nav__motion { min-height: 44px; letter-spacing: 0.06em; }
+.nav__motion:disabled { cursor: default; }
+.nav__actions { gap: 0.75rem; }
+.nav__wordmark { font-size: 1.125rem; }
+.nav__wordmark .seal { display: none; }
+.nav-panel { z-index: 105; overflow-y: auto; }
+.nav-panel__close { position: absolute; top: 1rem; right: var(--gutter); min-height: 44px; }
+.u-label { font-size: 0.75rem; }
+.link-rule, .chip, .choice, .field__input { min-height: 44px; }
+.link-rule { display: inline-flex; align-items: center; max-width: 100%; }
+.btn { white-space: normal; text-align: center; }
+fieldset { border: 0; min-width: 0; }
+select { background: var(--ground); color: var(--ink); border: 1px solid var(--metal); padding: 0.5rem; border-radius: 0; }
+select option { background: var(--ground); color: var(--ink); }
+.page-heading { padding-block: calc(var(--nav-height) + var(--space-lg)) var(--space-lg); }
+.page-heading h1 { max-width: 12ch; overflow-wrap: anywhere; line-height: 1.08; }
+.route-intro { padding-bottom: var(--space-lg); max-width: 72ch; }
+.home-opening { min-height: 100svh; display: flex; align-items: center; padding-block: calc(var(--nav-height) + 4rem) 5rem; overflow: hidden; }
+.home-opening__study { position: absolute; inset: 0 0 0 40%; pointer-events: none; }
+.home-opening__copy { position: relative; z-index: 1; }
+.home-opening__copy h1 { line-height: 1.06; }
+.home-opening__copy p, .home-opening__copy a { background: var(--sumi-void); width: fit-content; max-width: 46ch; }
+.home-opening__copy h1 { width: fit-content; background: var(--sumi-void); }
+.home-opening__kanji { position: absolute; right: var(--gutter); bottom: 4rem; font-size: clamp(2rem, 6vw, 5rem); color: var(--kin); }
+.cloth-host { position: relative; width: 100%; height: 100%; }
+.story-movement { padding-block: var(--space-xl); }
+.story-pair { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.75fr); gap: clamp(3rem, 10vw, 12rem); align-items: center; max-width: 100rem; margin-inline: auto; }
+.story-pair > *, .product-layout > * { min-width: 0; }
+.story-pair .plate { width: 100%; }
+.story-copy { max-width: 45ch; }
+.story-copy .u-headline { overflow-wrap: anywhere; }
+.story-copy > .link-rule { width: fit-content; }
+.closing-movement { padding-block: var(--space-xl); }
+.collection-filter { padding-bottom: var(--space-lg); display: grid; gap: 1.5rem; }
+.chips { flex-wrap: wrap; }
+.chip { color: var(--ink); }
+.product-layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.8fr); gap: clamp(2rem, 7vw, 8rem); padding-bottom: var(--space-xl); align-items: start; }
+.compact-stack > * + * { margin-top: 0.75rem; }
+.choices { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+.choice { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border: 1px solid var(--metal); cursor: pointer; }
+.choice input { accent-color: var(--ink); inline-size: 1rem; block-size: 1rem; }
+.choice:has(:checked) { background: var(--ink); color: var(--ground); }
+.choice:has(:checked) input { accent-color: var(--ground); }
+.reading { max-width: 62ch; margin-inline: auto; }
+.reading blockquote { padding-block: var(--space-md); }
+.spec { display: grid; grid-template-columns: minmax(6rem, 0.4fr) minmax(0, 1fr); gap: 1rem; }
+.plate__slot, .movement--paper .plate__slot { color: var(--ink); opacity: 1; background: var(--ground); padding: 0.5rem; font-size: 0.75rem; z-index: 2; }
+.plate__slot::before { display: none; }
+.swatch { max-width: 52rem; }
+.swatch__frame { position: relative; height: clamp(16rem, 40vw, 30rem); }
+.swatch__control { display: grid; gap: 1rem; padding-block: 1rem; }
+.swatch__slider { width: 100%; height: 44px; accent-color: var(--kin); }
+.bag-line { padding-block: 1.5rem; border-bottom: 1px solid var(--sumi-line); }
+.bag-line > * + * { margin-top: 0.75rem; }
+.bag-quantity { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+.bag-quantity select { min-height: 44px; }
+.bag-summary { padding: 1.5rem var(--gutter); border-top: 1px solid var(--sumi-line); overflow-y: auto; }
+.bag-summary > * + * { margin-top: 0.75rem; }
+.drawer__body { min-height: 5rem; }
+.drawer__head { flex-shrink: 0; }
+.footer__list a { font-size: 1rem; display: inline-flex; align-items: center; min-height: 44px; }
+.not-found { min-height: 80svh; padding-bottom: var(--space-lg); }
+@media (width <= 56rem) {
+  .story-pair, .product-layout { grid-template-columns: minmax(0, 1fr); gap: 3rem; }
+  .story-pair .plate, .product-layout .plate { max-width: 40rem; }
+  .story-copy { max-width: 50ch; }
+  .home-opening__study { inset: 35% 0 0; }
+  .home-opening__kanji { display: none; }
+  .footer__grid { grid-template-columns: 1fr; }
+}
+@media (width <= 30rem) {
+  .nav { gap: 0.5rem; }
+  .nav__actions { gap: 0.5rem; }
+  .nav__bag, .nav__motion { font-size: 0.75rem; letter-spacing: 0; }
+  .nav__bag-count { display: none; }
+  .spec { grid-template-columns: 1fr; gap: 0.5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .plate:hover .plate__media, .plate-link:focus-visible .plate__media { transform: none; }
+}
+html[data-motion='still'] *, html[data-motion='still'] *::before, html[data-motion='still'] *::after { transition-duration: 0s !important; animation: none !important; }
+html[data-motion='still'] .plate__media { transform: none !important; }
+@media (forced-colors: active) {
+  :focus-visible { outline: 2px solid Highlight; }
+  .choice, .chip, .btn { border: 1px solid ButtonText; }
+}
+@media print {
+  .drawer, .drawer__scrim, .gl-stage { display: none !important; }
+}
+/* Functional labels stay legible; button state changes preserve contrast at
+   every intermediate frame by switching foreground and ground together. */
+.link-rule, .btn { font-size: 0.875rem; }
+.nav__motion[aria-pressed='true'] { text-decoration: underline; text-underline-offset: 0.3em; }
+.btn--primary, .chip { transition: none; }
+.btn--primary::before { display: none; }
+.btn--primary:hover, .btn--primary:focus-visible { background: var(--shu-deep); color: var(--washi); }
+.product-layout .plate--static .plate__media { filter: none; }
+.product-layout .plate--static .plate__grade, .product-layout .plate--static .plate__wash { display: none; }

@@ -16,6 +16,7 @@
 
 import {
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -157,6 +158,8 @@ export function ClothSwatch({ cloth, tint, label, className }: ClothSwatchProps)
   const { progress, bounds } = useClothStage(hostRef, budget.enabled)
   const turn = useRef(0)
   const [degrees, setDegrees] = useState(0)
+  const [failed, setFailed] = useState(false)
+  const controlId = useId()
 
   useEffect(() => {
     if (!budget.enabled) return
@@ -164,7 +167,7 @@ export function ClothSwatch({ cloth, tint, label, className }: ClothSwatchProps)
     return () => releasePointer()
   }, [budget.enabled])
 
-  if (!budget.enabled) return null
+  if (!budget.enabled || failed) return null
 
   const onTurn = (event: ChangeEvent<HTMLInputElement>): void => {
     const value = Number(event.target.value)
@@ -175,7 +178,7 @@ export function ClothSwatch({ cloth, tint, label, className }: ClothSwatchProps)
   return (
     <div className={['swatch', className ?? ''].filter(Boolean).join(' ')}>
       <div ref={hostRef} className="swatch__frame">
-        <Stage camera={SWATCH_CAMERA} margin="80px" className="swatch__gl">
+        <Stage camera={SWATCH_CAMERA} margin="80px" className="swatch__gl" onFailure={() => setFailed(true)}>
           <SwatchPlane
             drape={cloth.drape}
             sheen={cloth.sheen}
@@ -189,11 +192,11 @@ export function ClothSwatch({ cloth, tint, label, className }: ClothSwatchProps)
       </div>
 
       <div className="swatch__control">
-        <label className="field__label" htmlFor="swatch-turn">
+        <label className="field__label" htmlFor={controlId}>
           {label}
         </label>
         <input
-          id="swatch-turn"
+          id={controlId}
           className="swatch__slider"
           type="range"
           min={-TURN_LIMIT}

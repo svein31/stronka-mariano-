@@ -25,7 +25,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react'
-import { Link, useLocation, useNavigate, useNavigationType } from 'react-router-dom'
+import { createPath, Link, useLocation, useNavigate, useNavigationType, useResolvedPath } from 'react-router-dom'
 import gsap from 'gsap'
 import { useCapabilities } from '../lib/capabilities'
 import { EASE } from '../lib/motion'
@@ -66,6 +66,9 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
   const veilRef = useRef<HTMLDivElement>(null)
   const sealRef = useRef<HTMLSpanElement>(null)
   const timelineRef = useRef<gsap.core.Timeline | null>(null)
+  const pendingDestination = useRef<string | null>(null)
+  const scrollRef = useRef(scroll)
+  scrollRef.current = scroll
   const [traveling, setTraveling] = useState(false)
   const [announcement, setAnnouncement] = useState('')
 
@@ -86,6 +89,7 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
       }
 
       setTraveling(true)
+      pendingDestination.current = to
       timelineRef.current?.kill()
 
       const timeline = gsap.timeline({
@@ -105,6 +109,7 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
           COVER - 0.18,
         )
         .call(() => {
+          pendingDestination.current = null
           navigate(to)
         })
         .to(sealRef.current, { opacity: 0, duration: 0.24, ease: 'power2.out' }, `+=${HOLD}`)
@@ -117,28 +122,42 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
     [traveling, location.pathname, location.search, reducedMotion, navigate],
   )
 
+  useEffect(() => {
+    if (!reducedMotion && navigationType !== 'POP') return
+    timelineRef.current?.kill()
+    timelineRef.current = null
+    if (veilRef.current) gsap.set(veilRef.current, { scaleY: 0, pointerEvents: 'none' })
+    setTraveling(false)
+    if (reducedMotion && pendingDestination.current) navigate(pendingDestination.current)
+    pendingDestination.current = null
+  }, [reducedMotion, location.key, navigationType, navigate])
+
   /* --- Scroll position on route change ----------------------------------- */
   useEffect(() => {
     if (navigationType === 'POP') {
       const remembered = scrollMemory.get(location.key)
       if (remembered !== undefined) {
-        scroll.scrollTo(remembered)
+        // History restoration is a position change, never another animation.
+        if (scrollRef.current.lenis) scrollRef.current.lenis.scrollTo(remembered, { immediate: true })
+        else scrollRef.current.scrollTo(remembered)
       } else {
-        scroll.reset()
+        scrollRef.current.reset()
       }
     } else {
-      scroll.reset()
+      scrollRef.current.reset()
     }
 
-    // The outgoing entry keeps the position it had when we left it.
+    const remember = () => scrollMemory.set(location.key, window.scrollY)
+    window.addEventListener('scroll', remember, { passive: true })
     return () => {
-      scrollMemory.set(location.key, window.scrollY)
+      window.removeEventListener('scroll', remember)
     }
-  }, [location.key, navigationType, scroll])
+  }, [location.key, navigationType])
 
   /* --- Focus and announcement on route change ---------------------------- */
   const firstRender = useRef(true)
   useEffect(() => {
+    if (traveling) return
     if (firstRender.current) {
       firstRender.current = false
       return
@@ -153,7 +172,7 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
     })
 
     return () => cancelAnimationFrame(frame)
-  }, [location.pathname, requestRefresh])
+  }, [location.pathname, traveling, requestRefresh])
 
   /* --- Kill an in-flight veil if unmounted mid-transition ---------------- */
   useEffect(() => {
@@ -165,7 +184,9 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
   /* The browser's own scroll restoration fights Lenis, so we take it over. */
   useEffect(() => {
     if ('scrollRestoration' in window.history) {
+      const previous = window.history.scrollRestoration
       window.history.scrollRestoration = 'manual'
+      return () => { window.history.scrollRestoration = previous }
     }
   }, [])
 
@@ -173,7 +194,7 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
 
   return (
     <TransitionContext.Provider value={value}>
-      {children}
+      <div inert={traveling}>{children}</div>
 
       <div className="veil" ref={veilRef} aria-hidden="true">
         <span className="veil__seal" ref={sealRef}>
@@ -197,16 +218,18 @@ type SumiLinkProps = ComponentProps<typeof Link>
 
 export function SumiLink({ onClick, ...rest }: SumiLinkProps) {
   const travel = useTravel()
+  const destination = useResolvedPath(rest.to)
 
   const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
     onClick?.(event)
     if (event.defaultPrevented) return
     if (event.button !== 0) return
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
-    if (rest.target === '_blank') return
+    if (rest.target && rest.target !== '_self') return
+    if (rest.reloadDocument || rest.replace || rest.state || rest.download) return
 
     event.preventDefault()
-    travel(typeof rest.to === 'string' ? rest.to : rest.to.pathname ?? '/')
+    travel(createPath(destination))
   }
 
   return <Link {...rest} onClick={handleClick} />

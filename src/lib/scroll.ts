@@ -34,6 +34,7 @@ export interface ScrollApi {
   reset: () => void
   stop: () => void
   start: () => void
+  dispose?: () => void
 }
 
 export function createScrollLayer(smoothed: boolean): ScrollApi {
@@ -90,11 +91,16 @@ export function createScrollLayer(smoothed: boolean): ScrollApi {
     },
     stop: () => lenis.stop(),
     start: () => lenis.start(),
+    dispose: () => {
+      gsap.ticker.remove(tick)
+      lenis.destroy()
+    },
   }
 }
 
 export function destroyScrollLayer(api: ScrollApi): void {
-  api.lenis?.destroy()
+  if (api.dispose) api.dispose()
+  else api.lenis?.destroy()
 }
 
 /**

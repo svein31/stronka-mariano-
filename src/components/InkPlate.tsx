@@ -145,7 +145,7 @@ export function InkPlate({
 
   const onError = useCallback(() => {
     setProbe((current) => {
-      if (current.state !== 'probing' || current.path === null) return current
+      if (current.path === null) return current
       const index = candidates.indexOf(current.path)
       const next = candidates[index + 1]
       if (next) return { state: 'probing', path: next }
@@ -179,41 +179,35 @@ export function InkPlate({
 
   const style: CSSProperties = { aspectRatio: aspect }
 
-  if (probe.state !== 'resolved' || probe.path === null) {
-    return (
-      <div
-        className={classes}
-        style={style}
-        role="img"
-        aria-label={alt}
-        data-slot-state="placeholder"
-      >
-        <span className="plate__fallback" style={fallback} aria-hidden="true" />
-        <span className="plate__wash" aria-hidden="true" />
-        <span className="plate__slot" aria-hidden="true">
-          {slot}
-        </span>
-        {children}
-      </div>
-    )
-  }
+  const resolved = probe.state === 'resolved' && probe.path !== null
 
   return (
-    <div className={classes} style={style} data-slot-state="resolved">
-      <img
-        className="plate__media"
-        src={probe.path}
-        alt={alt}
-        width={registry?.min[0]}
-        height={registry?.min[1]}
-        decoding={priority ? 'sync' : 'async'}
-        loading={priority ? 'eager' : 'lazy'}
-        fetchPriority={priority ? 'high' : 'auto'}
-        sizes={registry ? `min(${registry.min[0]}px, 100vw)` : undefined}
-        onError={onError}
-        onLoad={onLoad}
-        style={{ objectPosition: position }}
-      />
+    <div className={classes} style={style} data-slot-state={resolved ? 'resolved' : 'placeholder'}>
+      {!resolved ? (
+        <>
+          <span className="plate__fallback" style={fallback} aria-hidden="true" />
+          <span className="plate__slot" role="img" aria-label={`Photograph unavailable. ${alt}`}>
+            {probe.state === 'absent' ? 'Photograph forthcoming' : 'Loading photograph'}
+          </span>
+        </>
+      ) : null}
+      {probe.path ? (
+        <img
+          key={probe.path}
+          className="plate__media"
+          src={probe.path}
+          alt={resolved ? alt : ''}
+          aria-hidden={!resolved || undefined}
+          width={registry?.min[0]}
+          height={registry?.min[1]}
+          decoding={priority ? 'sync' : 'async'}
+          loading={priority ? 'eager' : 'lazy'}
+          fetchPriority={priority ? 'high' : 'auto'}
+          onError={onError}
+          onLoad={onLoad}
+          style={{ objectPosition: position, visibility: resolved ? 'visible' : 'hidden' }}
+        />
+      ) : null}
       <span className="plate__grade" aria-hidden="true" />
       <span className="plate__wash" aria-hidden="true" />
       {children}

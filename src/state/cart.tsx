@@ -56,15 +56,19 @@ function read(): CartLine[] {
 
     // Drop anything whose garment no longer exists rather than rendering a
     // line that cannot be resolved.
-    return parsed.filter((line): line is CartLine => {
-      if (typeof line !== 'object' || line === null) return false
+    return parsed.flatMap((line): CartLine[] => {
+      if (typeof line !== 'object' || line === null) return []
       const candidate = line as Partial<CartLine>
-      return (
-        typeof candidate.slug === 'string' &&
-        typeof candidate.size === 'string' &&
-        typeof candidate.colour === 'string' &&
-        garmentBySlug(candidate.slug) !== undefined
-      )
+      const garment = typeof candidate.slug === 'string' ? garmentBySlug(candidate.slug) : undefined
+      if (!garment || typeof candidate.size !== 'string' || !garment.sizes.includes(candidate.size) ||
+        !garment.colourways.some((colour) => colour.name === candidate.colour) ||
+        !Number.isInteger(candidate.quantity) || candidate.quantity! < 1 || candidate.quantity! > 99) return []
+      return [{
+        key: lineKey(garment.slug, candidate.size, candidate.colour!),
+        slug: garment.slug, name: garment.name, size: candidate.size,
+        colour: candidate.colour!, quantity: candidate.quantity!,
+        price: garment.price, slot: garment.slot, alt: garment.alt,
+      }]
     })
   } catch {
     return []
@@ -80,14 +84,8 @@ function write(lines: CartLine[]): void {
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [lines, setLines] = useState<CartLine[]>([])
+  const [lines, setLines] = useState<CartLine[]>(read)
   const [open, setOpen] = useState(false)
-
-  // Read once on mount rather than in the initialiser, so the first paint is
-  // identical for every visitor and there is no hydration-shaped mismatch.
-  useEffect(() => {
-    setLines(read())
-  }, [])
 
   useEffect(() => {
     write(lines)
@@ -99,7 +97,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const existing = current.find((entry) => entry.key === key)
       if (existing) {
         return current.map((entry) =>
-          entry.key === key ? { ...entry, quantity: entry.quantity + 1 } : entry,
+          entry.key === key ? { ...entry, quantity: Math.min(99, entry.quantity + 1) } : entry,
         )
       }
       return [...current, { ...line, key, quantity: 1 }]
@@ -112,6 +110,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const setQuantity = useCallback((key: string, quantity: number) => {
+    if (!Number.isInteger(quantity) || quantity > 99) return
     setLines((current) =>
       quantity <= 0
         ? current.filter((entry) => entry.key !== key)

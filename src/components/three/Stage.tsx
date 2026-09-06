@@ -18,6 +18,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Canvas, type RootState } from '@react-three/fiber'
 import { useMotionBudget } from '../../lib/capabilities'
+import { EnhancementBoundary } from '../EnhancementBoundary'
 
 export interface StageProps {
   children: ReactNode
@@ -29,6 +30,7 @@ export interface StageProps {
    * generous one so the scene is warm before it scrolls into frame.
    */
   margin?: string
+  onFailure?: () => void
 }
 
 export function Stage({
@@ -36,6 +38,7 @@ export function Stage({
   camera = { position: [0, 0, 6], fov: 38 },
   className,
   margin = '160px',
+  onFailure,
 }: StageProps) {
   const budget = useMotionBudget()
   const hostRef = useRef<HTMLDivElement>(null)
@@ -43,6 +46,19 @@ export function Stage({
 
   const [inView, setInView] = useState(false)
   const [tabVisible, setTabVisible] = useState(true)
+  const [failed, setFailed] = useState(false)
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const failureRef = useRef(onFailure)
+  failureRef.current = onFailure
+  const onContextLost = useMemo(() => (event: Event) => {
+    event.preventDefault()
+    setFailed(true)
+    failureRef.current?.()
+  }, [])
+
+  useEffect(() => () => {
+    canvasRef.current?.removeEventListener('webglcontextlost', onContextLost)
+  }, [onContextLost])
 
   /* Idle cost. IntersectionObserver is cheaper than reading scroll and it
      survives Lenis, which does not touch the native scroll timeline the way
@@ -51,6 +67,10 @@ export function Stage({
     if (!budget.enabled) return
     const host = hostRef.current
     if (!host) return
+    if (!('IntersectionObserver' in window)) {
+      setInView(true)
+      return
+    }
 
     const observer = new IntersectionObserver(
       (entries) => setInView(entries.some((entry) => entry.isIntersecting)),
@@ -64,6 +84,7 @@ export function Stage({
   useEffect(() => {
     if (!budget.enabled) return
     const onChange = (): void => setTabVisible(document.visibilityState === 'visible')
+    onChange()
     document.addEventListener('visibilitychange', onChange)
     return () => document.removeEventListener('visibilitychange', onChange)
   }, [budget.enabled])
@@ -87,12 +108,13 @@ export function Stage({
     if (running) invalidateRef.current?.(2)
   }, [running])
 
-  if (!budget.enabled) return null
+  if (!budget.enabled || failed) return null
 
   const classes = ['gl-stage', className ?? ''].filter(Boolean).join(' ')
 
   return (
     <div ref={hostRef} className={classes} aria-hidden="true" data-running={running}>
+      <EnhancementBoundary onFailure={onFailure}>
       <Canvas
         flat
         frameloop={running ? 'always' : 'never'}
@@ -103,16 +125,19 @@ export function Stage({
           alpha: true,
           stencil: false,
           depth: true,
-          powerPreference: 'high-performance',
-          failIfMajorPerformanceCaveat: false,
+          powerPreference: 'default',
+          failIfMajorPerformanceCaveat: true,
         }}
         onCreated={(store: RootState) => {
           invalidateRef.current = store.invalidate
-          store.gl.setClearColor(0x000000, 0)
+          store.gl.setClearColor(0x141519, 0)
+          canvasRef.current = store.gl.domElement
+          canvasRef.current.addEventListener('webglcontextlost', onContextLost)
         }}
       >
         {children}
       </Canvas>
+      </EnhancementBoundary>
     </div>
   )
 }

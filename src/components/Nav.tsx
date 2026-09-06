@@ -31,7 +31,7 @@ const SCRIM_AT = 64
 export function Nav() {
   const location = useLocation()
   const traveling = useTransitioning()
-  const { scroll, reducedMotion } = useCapabilities()
+  const { scroll, reducedMotion, systemReducedMotion, motionPaused, setMotionPaused } = useCapabilities()
   const { count, setOpen } = useCart()
 
   const shell = useRef<HTMLElement>(null)
@@ -67,9 +67,22 @@ export function Nav() {
 
   useEffect(() => {
     if (!open) return
+    const background = [shell.current, document.getElementById('main-content'), document.querySelector('footer')]
+    const prior = background.map((element) => element?.inert ?? false)
+    background.forEach((element) => { if (element) element.inert = true })
     scroll.stop()
-    return () => scroll.start()
+    return () => {
+      background.forEach((element, index) => { if (element) element.inert = prior[index] })
+      scroll.start()
+    }
   }, [open, scroll])
+
+  useEffect(() => {
+    const query = window.matchMedia('(min-width: 56.001rem)')
+    const onChange = () => { if (query.matches) setOpenPanel(false) }
+    query.addEventListener('change', onChange)
+    return () => query.removeEventListener('change', onChange)
+  }, [])
 
   // A route change means the panel has done its job.
   useEffect(() => {
@@ -130,6 +143,15 @@ export function Nav() {
 
         <div className="nav__actions">
           <button
+            className="nav__motion"
+            type="button"
+            aria-pressed={reducedMotion}
+            disabled={systemReducedMotion}
+            onClick={() => setMotionPaused(!motionPaused)}
+          >
+            {systemReducedMotion ? 'Motion reduced' : 'Pause motion'}
+          </button>
+          <button
             type="button"
             className="nav__bag"
             onClick={() => setOpen(true)}
@@ -169,7 +191,11 @@ export function Nav() {
         role="dialog"
         aria-modal={open ? 'true' : undefined}
         aria-label="Menu"
+        inert={!open}
+        tabIndex={-1}
+        data-lenis-prevent
       >
+        <button className="nav-panel__close link-rule" type="button" onClick={close}>Close menu</button>
         <nav aria-label="Routes">
           <ul className="nav-panel__list">
             {ROUTES.map((route) => (
