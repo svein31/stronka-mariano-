@@ -9,6 +9,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -21,6 +22,9 @@ import { detectWebGL, perfTier, useReducedMotion, type PerfTier } from './motion
 
 interface CapabilitiesValue {
   reducedMotion: boolean
+  systemReducedMotion: boolean
+  motionPaused: boolean
+  setMotionPaused: (paused: boolean) => void
   webgl: boolean
   tier: PerfTier
   scroll: ScrollApi
@@ -40,6 +44,9 @@ const NOOP_SCROLL: ScrollApi = {
 
 const CapabilitiesContext = createContext<CapabilitiesValue>({
   reducedMotion: false,
+  systemReducedMotion: false,
+  motionPaused: false,
+  setMotionPaused: () => undefined,
   webgl: false,
   tier: 'low',
   scroll: NOOP_SCROLL,
@@ -89,11 +96,19 @@ export const BUDGET_NONE: MotionBudget = {
 }
 
 export function CapabilitiesProvider({ children }: { children: ReactNode }) {
-  const reducedMotion = useReducedMotion()
+  const systemReducedMotion = useReducedMotion()
+  const [motionPaused, setMotionPaused] = useState(false)
+  const reducedMotion = systemReducedMotion || motionPaused
   const [webgl, setWebgl] = useState(false)
   const [tier, setTier] = useState<PerfTier>('low')
   const [scroll, setScroll] = useState<ScrollApi>(NOOP_SCROLL)
   const [refreshKey, setRefreshKey] = useState(0)
+  const requestRefresh = useCallback(() => setRefreshKey((key) => key + 1), [])
+
+  useEffect(() => {
+    document.documentElement.dataset.motion = reducedMotion ? 'still' : 'full'
+    return () => { delete document.documentElement.dataset.motion }
+  }, [reducedMotion])
 
   useEffect(() => {
     setWebgl(detectWebGL())
@@ -126,13 +141,16 @@ export function CapabilitiesProvider({ children }: { children: ReactNode }) {
   const value = useMemo<CapabilitiesValue>(
     () => ({
       reducedMotion,
+      systemReducedMotion,
+      motionPaused,
+      setMotionPaused,
       webgl,
       tier,
       scroll,
       refreshKey,
-      requestRefresh: () => setRefreshKey((key) => key + 1),
+      requestRefresh,
     }),
-    [reducedMotion, webgl, tier, scroll, refreshKey],
+    [reducedMotion, systemReducedMotion, motionPaused, webgl, tier, scroll, refreshKey, requestRefresh],
   )
 
   return <CapabilitiesContext.Provider value={value}>{children}</CapabilitiesContext.Provider>
@@ -155,6 +173,10 @@ export function useMotionAllowed(): boolean {
  * A low tier gets a lighter composed scene, never a broken or absent one.
  */
 export function useMotionBudget(): MotionBudget {
-  const { tier, webgl } = useCapabilities()
-  return tier === 'high' ? BUDGET_HIGH : webgl ? BUDGET_LOW : BUDGET_NONE
+  return motionBudgetFor(useCapabilities())
+}
+
+export function motionBudgetFor({ tier, webgl, reducedMotion }: Pick<CapabilitiesValue, 'tier' | 'webgl' | 'reducedMotion'>): MotionBudget {
+  if (!webgl || reducedMotion) return BUDGET_NONE
+  return tier === 'high' ? BUDGET_HIGH : BUDGET_LOW
 }

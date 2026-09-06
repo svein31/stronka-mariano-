@@ -29,7 +29,7 @@ const FOCUSABLE = [
  */
 function reachable(container: HTMLElement): HTMLElement[] {
   return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-    (element) => element.getClientRects().length > 0,
+    (element) => element.tabIndex >= 0 && !element.closest('[inert]') && element.getClientRects().length > 0,
   )
 }
 
@@ -87,7 +87,7 @@ export function useFocusTrap(
       if (event.shiftKey && (current === first || !surface.contains(current))) {
         event.preventDefault()
         last.focus()
-      } else if (!event.shiftKey && current === last) {
+      } else if (!event.shiftKey && (current === last || !surface.contains(current))) {
         event.preventDefault()
         first.focus()
       }
@@ -100,7 +100,11 @@ export function useFocusTrap(
     return () => {
       cancelAnimationFrame(frame)
       document.removeEventListener('keydown', onKeyDown, true)
-      opener?.focus()
+      // Overlay owners restore the background's inert state in their own
+      // cleanup. Restore focus after those cleanups, without scrolling.
+      queueMicrotask(() => {
+        if (opener?.isConnected) opener.focus({ preventScroll: true })
+      })
     }
   }, [active, container])
 }

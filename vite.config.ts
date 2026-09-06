@@ -46,7 +46,9 @@ export default defineConfig({
             {
               name: 'react',
               test: /node_modules[\\/](react|react-dom|scheduler|react-router|react-router-dom)[\\/]/,
-              priority: 20,
+              // Claim shared React dependencies before the WebGL group can
+              // absorb them and force every route to import the renderer.
+              priority: 50,
             },
             {
               /* Anything else a dependency drags in. Catching it here keeps

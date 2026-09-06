@@ -82,7 +82,8 @@ export function detectWebGL(): boolean {
   if (typeof window === 'undefined') return false
   try {
     const canvas = document.createElement('canvas')
-    const context = canvas.getContext('webgl2') ?? canvas.getContext('webgl')
+    // The installed Three renderer requires WebGL 2.
+    const context = canvas.getContext('webgl2', { failIfMajorPerformanceCaveat: true })
     if (!context) return false
     const lose = context.getExtension('WEBGL_lose_context')
     lose?.loseContext()

@@ -125,7 +125,7 @@ export function Cascade({
   useGSAP(
     () => {
       if (!allowed || !ref.current) return
-      const targets = ref.current.querySelectorAll(selector)
+      const targets = ref.current.querySelectorAll(selector.startsWith('>') ? `:scope ${selector}` : selector)
       if (targets.length === 0) return
 
       gsap.fromTo(
