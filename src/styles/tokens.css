@@ -1,0 +1,103 @@
+/* ==========================================================================
+   SUMI design tokens
+   Normative source: DESIGN.md frontmatter. Do not redefine values here
+   without updating DESIGN.md, and never introduce #000 or #fff.
+   ========================================================================== */
+
+:root {
+  /* --- Ink ------------------------------------------------------------- */
+  --sumi-void: oklch(0.13 0.006 265);
+  --sumi: oklch(0.175 0.008 265);
+  --sumi-lift: oklch(0.225 0.01 265);
+  --sumi-line: oklch(0.34 0.012 265);
+
+  /* --- Paper ----------------------------------------------------------- */
+  --washi: oklch(0.962 0.006 90);
+  --washi-deep: oklch(0.905 0.01 88);
+  --washi-line: oklch(0.76 0.012 88);
+
+  /* --- Pigment --------------------------------------------------------- */
+  --kin: oklch(0.745 0.055 88);
+  --shu: oklch(0.572 0.185 30);
+  --shu-lift: oklch(0.645 0.165 30);
+  --shu-deep: oklch(0.455 0.155 30);
+  --ai: oklch(0.34 0.065 258);
+
+  /* --- Semantic roles, ink movement (the default) ---------------------- */
+  --ground: var(--sumi);
+  --ground-deep: var(--sumi-void);
+  --ground-lift: var(--sumi-lift);
+  --rule: var(--sumi-line);
+  --ink: var(--washi);
+  --ink-dim: oklch(0.962 0.006 90 / 0.64);
+  --ink-faint: oklch(0.962 0.006 90 / 0.42);
+  --accent: var(--shu-lift);
+  --metal: var(--kin);
+
+  /* --- Type ------------------------------------------------------------ */
+  --font-display: 'Shippori Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+  --font-body: 'Zen Kaku Gothic New', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+
+  --step-display: clamp(3rem, 13vw, 12rem);
+  --step-headline: clamp(2rem, 5.5vw, 4.5rem);
+  --step-title: clamp(1.375rem, 2.6vw, 2.125rem);
+  --step-lede: clamp(1.0625rem, 1.5vw, 1.3125rem);
+  --step-body: 1rem;
+  --step-small: 0.875rem;
+  --step-label: 0.6875rem;
+
+  --track-label: 0.22em;
+  --track-vertical: 0.14em;
+
+  /* --- Rhythm ---------------------------------------------------------- */
+  --gutter: clamp(1.25rem, 4.5vw, 5rem);
+  --space-hair: 1px;
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 2rem;
+  --space-lg: clamp(4rem, 9vw, 9rem);
+  --space-xl: clamp(7rem, 16vw, 17rem);
+  --space-movement: clamp(9rem, 22vw, 24rem);
+
+  /* --- Motion ---------------------------------------------------------- */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+
+  --dur-seal: 260ms;
+  --dur-micro: 320ms;
+  --dur-hover: 420ms;
+  --dur-reveal: 1100ms;
+  --dur-slow: 1400ms;
+
+  /* --- Shape ----------------------------------------------------------- */
+  --radius-none: 0px;
+  --radius-seal: 2px;
+
+  /* --- Overlay elevation (the only shadow in the system) --------------- */
+  --shadow-overlay:
+    -1px 0 0 0 var(--sumi-line),
+    -40px 0 120px -40px oklch(0.08 0.004 265 / 0.9);
+
+  /* --- Layout ---------------------------------------------------------- */
+  --nav-height: clamp(4rem, 7vh, 5.5rem);
+  --measure: 62ch;
+}
+
+/* Paper movements flip every semantic role at once. This is the site's
+   primary rhythm: ink movement, then washi relief, then ink again. */
+.movement--paper {
+  --ground: var(--washi);
+  --ground-deep: var(--washi-deep);
+  --ground-lift: var(--washi-deep);
+  --rule: var(--washi-line);
+  --ink: var(--sumi);
+  --ink-dim: oklch(0.175 0.008 265 / 0.68);
+  --ink-faint: oklch(0.175 0.008 265 / 0.46);
+  --accent: var(--shu-deep);
+  --metal: oklch(0.52 0.05 88);
+
+  background-color: var(--washi);
+  color: var(--sumi);
+}

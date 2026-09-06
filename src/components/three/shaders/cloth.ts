@@ -1,0 +1,255 @@
+/* ==========================================================================
+   Sumi cloth. The one material language every 3D surface in the site shares.
+
+   The cloth is a subdivided plane displaced by layered simplex noise, with
+   normals derived analytically from the displacement rather than from a
+   normal map, so the lighting is always correct for whatever the fabric is
+   doing. Drape, sheen, and thread visibility come from the garment's real
+   cloth parameters in data/collection.ts, which is why the Habotai Shirt
+   moves differently from the Sashiko Jacket without anyone tuning it.
+
+   Colours are resolved from the audited palette so the shader and the CSS
+   cannot drift apart.
+   ========================================================================== */
+
+import * as THREE from 'three'
+import { SHADER_PALETTE } from './palette'
+import { SIMPLEX_NOISE_GLSL } from './noise'
+
+export interface ClothParameters {
+  /** 0 is a board, 1 is water. From the garment's cloth data. */
+  drape: number
+  /** 0 is matte cotton, 1 is habotai catching a window. */
+  sheen: number
+  /** How visible individual thread is at the surface. */
+  weave: number
+  /** Base tint of the cloth itself. Defaults to sumi ink. */
+  tint?: string
+  /** Overall plane opacity, used to fade scenes in and out. */
+  opacity?: number
+}
+
+export interface ClothUniforms {
+  /* ShaderMaterial asks for a string index signature on its uniform map. The
+     named properties below stay strongly typed so scenes cannot read a typo. */
+  [uniform: string]: THREE.IUniform
+  uTime: { value: number }
+  /** Pointer position in plane space, lagged toward the real cursor. */
+  uPointer: { value: THREE.Vector2 }
+  /** 0 to 1. How hard the cursor is currently pushing the cloth. */
+  uGust: { value: number }
+  uDrape: { value: number }
+  uSheen: { value: number }
+  uWeave: { value: number }
+  uSize: { value: THREE.Vector2 }
+  /** 0 to 1. Scroll progress through the owning movement. */
+  uScroll: { value: number }
+  uOpacity: { value: number }
+  uInk: { value: THREE.Color }
+  uDeep: { value: THREE.Color }
+  uIndigo: { value: THREE.Color }
+  uPaper: { value: THREE.Color }
+}
+
+export const CLOTH_VERTEX = /* glsl */ `
+${SIMPLEX_NOISE_GLSL}
+
+uniform float uTime;
+uniform vec2  uPointer;
+uniform float uGust;
+uniform float uDrape;
+uniform vec2  uSize;
+uniform float uScroll;
+
+varying vec2  vUv;
+varying vec3  vNormal;
+varying vec3  vView;
+varying float vElevation;
+varying float vHang;
+
+/* Displacement for a single point. Called three times per vertex so the
+   normal can be derived from the surface rather than guessed at. */
+float elevation(vec2 p, vec2 surfaceUv) {
+  float t = uTime;
+
+  // Three octaves: the broad fall of the cloth, a mid fold, a fine ripple.
+  float e  = snoise(vec3(p * 0.30, t * 0.090)) * 0.92;
+        e += snoise(vec3(p * 0.78, t * 0.150)) * 0.33;
+        e += snoise(vec3(p * 2.10, t * 0.230)) * 0.10;
+
+  // Hang. Cloth is pinned along the top edge and released below, so the
+  // further down it goes the more it is permitted to move.
+  float hang = smoothstep(1.0, 0.0, surfaceUv.y);
+  float swing = mix(0.16, 1.0, pow(hang, 1.32));
+
+  // One deep fold running the length, the way an open coat falls.
+  float fold = sin(p.x * 0.85 + t * 0.11 + snoise(vec3(p * 0.2, t * 0.05)) * 1.7);
+  e += fold * 0.30 * swing;
+
+  // The scroll leans the cloth back as the visitor unrolls past it.
+  e += snoise(vec3(p * 0.16, uScroll * 2.4)) * 0.42 * uScroll;
+
+  // Pointer gust: a gaussian following the cursor with lag.
+  float d = distance(p, uPointer);
+  e += exp(-d * d * 0.26) * uGust * 1.45 * swing;
+
+  return e * swing * uDrape;
+}
+
+void main() {
+  vUv = uv;
+
+  /* The geometry is a unit plane and uSize scales it here rather than on the
+     mesh, so a resize changes the cloth's world extent without rebuilding a
+     128x128 buffer. Displacement, epsilon, and the pointer all live in this
+     same scaled space, which keeps the normal correct at any viewport. */
+  vec2 base = position.xy * uSize;
+
+  // Epsilon scaled to the plane so the derived normal holds at any size.
+  float eps = max(uSize.x, uSize.y) / 220.0;
+
+  float e  = elevation(base, uv);
+  float ex = elevation(base + vec2(eps, 0.0), uv + vec2(eps / uSize.x, 0.0));
+  float ey = elevation(base + vec2(0.0, eps), uv + vec2(0.0, eps / uSize.y));
+
+  vec3 displaced = vec3(base, e);
+
+  vec3 tangentX = vec3(eps, 0.0, ex - e);
+  vec3 tangentY = vec3(0.0, eps, ey - e);
+  vec3 derived = normalize(cross(tangentX, tangentY));
+
+  vElevation = e;
+  vHang = smoothstep(1.0, 0.0, uv.y);
+  vNormal = normalize(normalMatrix * derived);
+
+  vec4 world = modelMatrix * vec4(displaced, 1.0);
+  vView = normalize(cameraPosition - world.xyz);
+
+  gl_Position = projectionMatrix * viewMatrix * world;
+}
+`
+
+export const CLOTH_FRAGMENT = /* glsl */ `
+uniform vec3  uInk;
+uniform vec3  uDeep;
+uniform vec3  uIndigo;
+uniform vec3  uPaper;
+uniform float uSheen;
+uniform float uWeave;
+uniform float uOpacity;
+uniform vec2  uSize;
+
+varying vec2  vUv;
+varying vec3  vNormal;
+varying vec3  vView;
+varying float vElevation;
+varying float vHang;
+
+void main() {
+  vec3 N = normalize(vNormal);
+  vec3 V = normalize(vView);
+
+  // A single high window from the upper left, and a cold bounce from below.
+  vec3 keyDir  = normalize(vec3(-0.52, 0.74, 0.43));
+  vec3 fillDir = normalize(vec3(0.38, -0.62, 0.68));
+
+  float key  = max(dot(N, keyDir), 0.0);
+  float fill = max(dot(N, fillDir), 0.0);
+
+  // Bokashi. Tone gradates with elevation: valleys inked dense, ridges thin.
+  float depth = smoothstep(-0.95, 0.95, vElevation);
+  vec3 base = mix(uInk, uDeep, 1.0 - depth);
+
+  // Indigo settles into the deepest part of the wash, where dye pools.
+  base = mix(base, uIndigo, pow(1.0 - depth, 1.6) * 0.44);
+
+  vec3 colour = base * (0.26 + key * 0.88 + fill * 0.17);
+
+  // Anisotropic sheen. Silk catches light along the thread, not at a point,
+  // so the specular exponent is driven by the fabric's own sheen value.
+  vec3 half_ = normalize(keyDir + V);
+  float exponent = mix(10.0, 110.0, uSheen);
+  float gloss = pow(max(dot(N, half_), 0.0), exponent);
+  colour += uPaper * gloss * (0.16 + uSheen * 0.66);
+
+  // The rim where cloth turns away from the window and catches it edge on.
+  float rim = pow(1.0 - max(dot(N, V), 0.0), 2.7);
+  colour += uPaper * rim * (0.10 + uSheen * 0.18);
+
+  /* Weave. Warp and weft crossing at a physically motivated thread count.
+     A sine this dense aliases into shimmer at hero distance, so the screen
+     derivative of the phase decides how much of it survives: far away the
+     thread dissolves, close up it appears. That is what real cloth does, and
+     it means nobody has to author two versions of the same surface. */
+  float threads = max(uSize.x, uSize.y) * 46.0;
+  float warpPhase = vUv.x * threads;
+  float weftPhase = vUv.y * threads * 0.86;
+
+  float warp = sin(warpPhase) * 0.5 + 0.5;
+  float weft = sin(weftPhase) * 0.5 + 0.5;
+  float slub = warp * 0.62 + weft * 0.38;
+
+  float shimmer = max(fwidth(warpPhase), fwidth(weftPhase));
+  float legible = 1.0 - smoothstep(1.1, 2.6, shimmer);
+
+  colour *= 1.0 - slub * uWeave * 0.13 * legible;
+
+  // Halo of loose fibre standing off the surface, backlit at the shoulder.
+  float halo = pow(max(dot(N, keyDir), 0.0), 0.6) * vHang;
+  colour += uIndigo * halo * uWeave * 0.10;
+
+  // Fade the plane off at its edges so it never shows a rectangular border.
+  float edgeX = smoothstep(0.0, 0.20, vUv.x) * smoothstep(1.0, 0.80, vUv.x);
+  float edgeY = smoothstep(0.0, 0.08, vUv.y) * smoothstep(1.0, 0.82, vUv.y);
+  float alpha = edgeX * mix(0.68, 1.0, edgeY) * uOpacity;
+
+  if (alpha < 0.002) discard;
+
+  gl_FragColor = vec4(colour, alpha);
+
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+}
+`
+
+export function createClothUniforms(
+  size: readonly [number, number],
+  parameters: ClothParameters = { drape: 0.75, sheen: 0.25, weave: 0.4 },
+): ClothUniforms {
+  const ink = new THREE.Color(parameters.tint ?? SHADER_PALETTE.sumiLift)
+
+  /* Valleys keep the cloth's own hue and simply go denser with ink. Deriving
+     the deep end from the tint is what lets one material serve both an ink
+     black coat and an undyed silk without either turning to mud. */
+  const deep = ink.clone().lerp(new THREE.Color(SHADER_PALETTE.sumiVoid), 0.55)
+
+  return {
+    uTime: { value: 0 },
+    uPointer: { value: new THREE.Vector2(0, 0) },
+    uGust: { value: 0 },
+    uDrape: { value: parameters.drape },
+    uSheen: { value: parameters.sheen },
+    uWeave: { value: parameters.weave },
+    uSize: { value: new THREE.Vector2(size[0], size[1]) },
+    uScroll: { value: 0 },
+    uOpacity: { value: parameters.opacity ?? 1 },
+    uInk: { value: ink },
+    uDeep: { value: deep },
+    uIndigo: { value: new THREE.Color(SHADER_PALETTE.ai) },
+    uPaper: { value: new THREE.Color(SHADER_PALETTE.washi) },
+  }
+}
+
+export function createClothMaterial(
+  size: readonly [number, number],
+  parameters: ClothParameters = { drape: 0.75, sheen: 0.25, weave: 0.4 },
+): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    uniforms: createClothUniforms(size, parameters),
+    vertexShader: CLOTH_VERTEX,
+    fragmentShader: CLOTH_FRAGMENT,
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  })
+}

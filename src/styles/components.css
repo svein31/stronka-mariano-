@@ -1,0 +1,949 @@
+/* ==========================================================================
+   Components. Every rule here traces to DESIGN.md section 5.
+   Zero radius except the seal. Hairlines, never shadows. Transform and
+   opacity only, never layout properties.
+   ========================================================================== */
+
+/* --- Buttons ------------------------------------------------------------- */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+  padding: 1.125rem 2.75rem;
+  border-radius: var(--radius-none);
+  font-size: var(--step-label);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: color var(--dur-hover) var(--ease-out-expo);
+}
+
+.btn__label {
+  position: relative;
+  z-index: 1;
+}
+
+/* The fill sweeps up from the hem rather than cross-fading, which reads as
+   cloth being drawn across the button. Transform only. */
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  transform: translateY(101%);
+  transition: transform var(--dur-hover) var(--ease-out-expo);
+}
+
+.btn:hover::before,
+.btn:focus-visible::before {
+  transform: translateY(0);
+}
+
+.btn--primary {
+  background-color: var(--ink);
+  color: var(--ground);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+.btn--primary::before {
+  background-color: var(--shu-deep);
+}
+
+.btn--primary:hover,
+.btn--primary:focus-visible {
+  color: var(--washi);
+}
+
+/* Ghost survives on both grounds because it inherits the semantic tokens
+   that the movement flips. */
+.btn--ghost {
+  background-color: transparent;
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--rule);
+}
+
+.btn--ghost::before {
+  background-color: var(--ink);
+}
+
+.btn--ghost:hover,
+.btn--ghost:focus-visible {
+  color: var(--ground);
+}
+
+/* Underline link. The rule scales from the left, never text-decoration. */
+.link-rule {
+  position: relative;
+  display: inline-block;
+  padding-block: 0.375rem;
+  font-size: var(--step-label);
+  font-weight: 500;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--ink);
+  transition: color var(--dur-micro) var(--ease-out-expo);
+}
+
+.link-rule::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background-color: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--dur-hover) var(--ease-out-expo);
+}
+
+.link-rule:hover,
+.link-rule:focus-visible {
+  color: var(--accent);
+}
+
+.link-rule:hover::after,
+.link-rule:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* --- Chips --------------------------------------------------------------- */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.chip {
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius-none);
+  background-color: transparent;
+  color: var(--ink-dim);
+  font-size: var(--step-label);
+  font-weight: 500;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  box-shadow: inset 0 0 0 1px var(--rule);
+  transition:
+    color var(--dur-micro) var(--ease-out-expo),
+    background-color var(--dur-micro) var(--ease-out-expo),
+    box-shadow var(--dur-micro) var(--ease-out-expo);
+}
+
+.chip:hover {
+  color: var(--ink);
+}
+
+.chip[aria-pressed='true'] {
+  background-color: var(--ink);
+  color: var(--ground);
+  box-shadow:
+    inset 0 0 0 1px var(--ink),
+    inset 0 -2px 0 0 var(--accent);
+}
+
+/* --- Fields -------------------------------------------------------------- */
+.field {
+  display: block;
+  width: 100%;
+}
+
+.field__label {
+  display: block;
+  margin-block-end: 0.5rem;
+  font-size: var(--step-label);
+  font-weight: 500;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.field__control {
+  position: relative;
+}
+
+.field__input {
+  width: 100%;
+  padding: 0.875rem 0;
+  background-color: transparent;
+  border: 0;
+  border-radius: var(--radius-none);
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink);
+  font-size: var(--step-body);
+  font-weight: 300;
+}
+
+.field__input::placeholder {
+  color: var(--ink-faint);
+}
+
+/* The underline scales in from the left on focus. No glow, no box. */
+.field__control::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background-color: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 380ms var(--ease-out-expo);
+}
+
+.field__control:focus-within::after {
+  transform: scaleX(1);
+}
+
+.field__input:focus-visible {
+  outline: none;
+}
+
+.field--invalid .field__input {
+  border-bottom-color: var(--accent);
+}
+
+.field__error {
+  margin-block-start: 0.5rem;
+  font-size: var(--step-small);
+  color: var(--accent);
+}
+
+/* --- The hanko seal ------------------------------------------------------ */
+.seal {
+  display: grid;
+  place-items: center;
+  inline-size: clamp(3.5rem, 5vw, 4.75rem);
+  block-size: clamp(3.5rem, 5vw, 4.75rem);
+  border-radius: var(--radius-seal);
+  background-color: var(--shu);
+  color: var(--washi);
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 2.6vw, 2.5rem);
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+}
+
+.seal--inline {
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  font-size: 0.9375rem;
+  border-radius: 1px;
+}
+
+/* --- The ink plate -------------------------------------------------------
+   Every photograph lives in a plate. The grade unifies whatever asset is
+   dropped into public/media so the lookbook reads as one body of work: ink
+   at rest, true colour on attention. */
+.plate {
+  position: relative;
+  display: block;
+  inline-size: 100%;
+  overflow: hidden;
+  background-color: var(--ground-lift);
+}
+
+.plate__media {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  object-position: center;
+  filter: grayscale(1) contrast(1.08) brightness(0.88);
+  transition:
+    filter 900ms var(--ease-out-expo),
+    transform 1400ms var(--ease-out-expo);
+  will-change: transform;
+}
+
+/* Indigo pushed into the shadows. Blend, not overlay, so highlights survive. */
+.plate__grade {
+  position: absolute;
+  inset: 0;
+  background-color: var(--ai);
+  mix-blend-mode: color;
+  opacity: 0.55;
+  pointer-events: none;
+  transition: opacity 900ms var(--ease-out-expo);
+}
+
+/* Bokashi wash from the top edge, the way ink gradates off a brush. */
+.plate__wash {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+    to bottom,
+    oklch(0.13 0.006 265 / 0.5) 0%,
+    oklch(0.13 0.006 265 / 0) 42%,
+    oklch(0.13 0.006 265 / 0) 62%,
+    oklch(0.13 0.006 265 / 0.62) 100%
+  );
+  pointer-events: none;
+  transition: opacity 900ms var(--ease-out-expo);
+}
+
+.plate:hover .plate__media,
+.plate:focus-within .plate__media,
+a.plate:hover .plate__media {
+  filter: grayscale(0.08) contrast(1.02) brightness(1);
+  transform: scale(1.035);
+}
+
+.plate:hover .plate__grade,
+.plate:focus-within .plate__grade {
+  opacity: 0.1;
+}
+
+/* The procedural bokashi fallback shown until a real asset is dropped in.
+   It is composed, not a gray box, and it names its own slot. */
+.plate__fallback {
+  position: absolute;
+  inset: 0;
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.plate__slot {
+  position: absolute;
+  left: var(--space-sm);
+  bottom: var(--space-sm);
+  z-index: 2;
+  font-size: var(--step-label);
+  font-weight: 500;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: oklch(0.962 0.006 90 / 0.44);
+  pointer-events: none;
+}
+
+.movement--paper .plate__slot {
+  color: oklch(0.175 0.008 265 / 0.46);
+}
+
+.plate__slot::before {
+  content: 'media/';
+  color: var(--metal);
+}
+
+/* Thumbnails and bag lines sit inside dense layouts where a hover lift would
+   read as noise, so they opt out. */
+.plate--static .plate__media {
+  transition: none;
+}
+
+.plate--static:hover .plate__media,
+.plate--static:focus-within .plate__media {
+  filter: grayscale(1) contrast(1.08) brightness(0.88);
+  transform: none;
+}
+
+.plate--static:hover .plate__grade,
+.plate--static:focus-within .plate__grade {
+  opacity: 0.55;
+}
+
+/* A plate wrapped in a link takes its focus treatment from the anchor. */
+.plate-link {
+  display: block;
+  border-radius: var(--radius-none);
+}
+
+.plate-link:focus-visible {
+  outline: 1px solid var(--metal);
+  outline-offset: 4px;
+}
+
+.plate-link:focus-visible .plate__media {
+  filter: grayscale(0.08) contrast(1.02) brightness(1);
+  transform: scale(1.035);
+}
+
+.plate-link:focus-visible .plate__grade {
+  opacity: 0.1;
+}
+
+/* --- Navigation ---------------------------------------------------------- */
+.nav {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  z-index: 100;
+  block-size: var(--nav-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding-inline: var(--gutter);
+  transition: background-color var(--dur-hover) var(--ease-out-expo);
+}
+
+.nav::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 1px;
+  background-color: var(--sumi-line);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 600ms var(--ease-out-expo);
+}
+
+.nav[data-scrolled='true'] {
+  background-color: oklch(0.13 0.006 265 / 0.82);
+}
+
+.nav[data-scrolled='true']::after {
+  transform: scaleX(1);
+}
+
+/* A second navigation started mid-transition would queue up behind the veil
+   and land somewhere the visitor did not ask for. */
+.nav[data-traveling='true'] {
+  pointer-events: none;
+}
+
+.nav__wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--washi);
+}
+
+.nav__links {
+  display: flex;
+  align-items: center;
+  gap: clamp(1.25rem, 2.6vw, 2.5rem);
+}
+
+.nav__link {
+  position: relative;
+  padding-block: 0.5rem;
+  font-size: var(--step-label);
+  font-weight: 500;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: oklch(0.962 0.006 90 / 0.72);
+  transition: color var(--dur-micro) var(--ease-out-expo);
+}
+
+.nav__link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0.25rem;
+  width: 100%;
+  height: 1px;
+  background-color: var(--kin);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--dur-hover) var(--ease-out-expo);
+}
+
+.nav__link:hover {
+  color: var(--washi);
+}
+
+.nav__link:hover::after {
+  transform: scaleX(1);
+}
+
+.nav__link[aria-current='page'] {
+  color: var(--shu-lift);
+}
+
+.nav__link[aria-current='page']::after {
+  background-color: var(--shu-lift);
+  transform: scaleX(1);
+}
+
+.nav__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.nav__bag {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.375rem;
+  padding-block: 0.5rem;
+  font-size: var(--step-label);
+  font-weight: 500;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: oklch(0.962 0.006 90 / 0.72);
+  transition: color var(--dur-micro) var(--ease-out-expo);
+}
+
+.nav__bag:hover {
+  color: var(--washi);
+}
+
+.nav__bag-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--kin);
+}
+
+/* Scroll progress hairline, under the shell. */
+.nav__progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background-color: var(--kin);
+  transform: scaleX(0);
+  transform-origin: left center;
+  will-change: transform;
+}
+
+.nav__toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  padding-inline: 0.25rem;
+}
+
+/* Named rather than `.nav__toggle span`, because the button also carries an
+   `.sr-only` span and a descendant selector would style it as a third bar. */
+.nav__bar {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background-color: var(--washi);
+  transform-origin: center;
+  transition: transform var(--dur-micro) var(--ease-out-expo);
+}
+
+.nav__toggle[aria-expanded='true'] .nav__bar--top {
+  transform: translateY(3.5px) rotate(45deg);
+}
+
+.nav__toggle[aria-expanded='true'] .nav__bar--bottom {
+  transform: translateY(-3.5px) rotate(-45deg);
+}
+
+/* Mobile panel: full viewport, routes set as display type with the kanji
+   standing vertical beside them. Closed with `visibility` rather than the
+   `hidden` attribute, because `display: none` would collapse the flex layout
+   the route items animate inside, and would leave the fade with nothing to
+   fade. Visibility is delayed on the way out so it lands after the ink does. */
+.nav-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--nav-height) var(--gutter) var(--space-lg);
+  background-color: var(--sumi-void);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--dur-hover) var(--ease-out-quart),
+    visibility 0s linear var(--dur-hover);
+}
+
+.nav-panel[data-open='true'] {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity var(--dur-hover) var(--ease-out-quart),
+    visibility 0s linear 0s;
+}
+
+.nav-panel__list {
+  display: grid;
+  gap: var(--space-md);
+  list-style: none;
+}
+
+.nav-panel__link {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  padding-block-end: var(--space-sm);
+  border-bottom: 1px solid var(--sumi-line);
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 11vw, 3.5rem);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--washi);
+}
+
+.nav-panel__index {
+  align-self: flex-start;
+  font-family: var(--font-body);
+  font-size: var(--step-label);
+  font-weight: 500;
+  letter-spacing: var(--track-label);
+  color: var(--kin);
+}
+
+.nav-panel__label {
+  flex: 1;
+}
+
+/* The only vertical type in the panel, and it is decoration: the label
+   beside it says the same thing horizontally, so nothing has to be parsed. */
+.nav-panel__kanji {
+  font-size: var(--step-small);
+  color: var(--ink-faint);
+}
+
+.nav-panel__link[aria-current='page'] .nav-panel__label {
+  color: var(--shu-lift);
+}
+
+@media (width <= 56rem) {
+  .nav__links {
+    display: none;
+  }
+
+  .nav__toggle {
+    display: flex;
+  }
+}
+
+/* --- Cart drawer ---------------------------------------------------------
+   Slides in from the right on transform only. Visibility is delayed on the
+   way out so the panel is still on screen while it travels. */
+.drawer {
+  position: fixed;
+  inset-block: 0;
+  right: 0;
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  inline-size: min(28rem, 100vw);
+  background-color: var(--sumi-lift);
+  color: var(--washi);
+  box-shadow: var(--shadow-overlay);
+  transform: translateX(101%);
+  visibility: hidden;
+  transition:
+    transform 620ms var(--ease-out-expo),
+    visibility 0s linear 620ms;
+}
+
+.drawer[data-open='true'] {
+  transform: translateX(0);
+  visibility: visible;
+  transition:
+    transform 620ms var(--ease-out-expo),
+    visibility 0s linear 0s;
+}
+
+.drawer__head,
+.drawer__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--gutter);
+}
+
+.drawer__head {
+  border-bottom: 1px solid var(--sumi-line);
+}
+
+.drawer__foot {
+  border-top: 1px solid var(--sumi-line);
+}
+
+.drawer__body {
+  flex: 1;
+  overflow-y: auto;
+  padding-inline: var(--gutter);
+  overscroll-behavior: contain;
+}
+
+.drawer__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  background-color: oklch(0.13 0.006 265 / 0.7);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 620ms var(--ease-out-quart),
+    visibility 0s linear 620ms;
+}
+
+.drawer__scrim[data-open='true'] {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 620ms var(--ease-out-quart),
+    visibility 0s linear 0s;
+}
+
+/* Drawn from pseudo-elements rather than child spans, so the accessible name
+   can live in an `.sr-only` span without being mistaken for part of the mark.
+   The cross turns a quarter on attention, which is the whole interaction. */
+.drawer__close {
+  position: relative;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  display: grid;
+  place-items: center;
+  color: var(--washi);
+}
+
+.drawer__close::before,
+.drawer__close::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  inline-size: 1.125rem;
+  block-size: 1px;
+  translate: -50% -50%;
+  background-color: currentcolor;
+  transition: transform var(--dur-hover) var(--ease-out-expo);
+}
+
+.drawer__close::before {
+  transform: rotate(45deg);
+}
+
+.drawer__close::after {
+  transform: rotate(-45deg);
+}
+
+.drawer__close:hover::before,
+.drawer__close:focus-visible::before {
+  transform: rotate(225deg);
+}
+
+.drawer__close:hover::after,
+.drawer__close:focus-visible::after {
+  transform: rotate(135deg);
+}
+
+.drawer-line {
+  display: grid;
+  grid-template-columns: 5rem 1fr auto;
+  gap: var(--space-sm);
+  align-items: center;
+  padding-block: var(--space-sm);
+  border-bottom: 1px solid var(--sumi-line);
+}
+
+.drawer-line__thumb {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background-color: var(--sumi);
+}
+
+.drawer-line__thumb img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.06) brightness(0.9);
+}
+
+.drawer-empty {
+  padding-block: var(--space-xl);
+  color: var(--ink-dim);
+  text-align: center;
+}
+
+/* --- Page transition veil ------------------------------------------------
+   Ink sweeps across the viewport between routes. One panel, two movements. */
+.veil {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  pointer-events: none;
+  background-color: var(--sumi-void);
+  transform: scaleY(0);
+  transform-origin: bottom center;
+}
+
+.veil__seal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  opacity: 0;
+}
+
+/* --- Arrival veil -------------------------------------------------------- */
+.arrival {
+  position: fixed;
+  inset: 0;
+  z-index: 160;
+  display: grid;
+  place-items: center;
+  background-color: var(--sumi-void);
+}
+
+.arrival__word {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 9vw, 7rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--washi);
+}
+
+/* --- Footer -------------------------------------------------------------- */
+.footer {
+  position: relative;
+  padding-block: var(--space-xl) var(--space-lg);
+  background-color: var(--sumi-void);
+  color: var(--washi);
+}
+
+.footer__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--space-lg) var(--space-md);
+}
+
+.footer__head {
+  font-size: var(--step-label);
+  font-weight: 500;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--kin);
+  margin-block-end: var(--space-sm);
+}
+
+.footer__list {
+  display: grid;
+  gap: 0.625rem;
+}
+
+.footer__list a {
+  display: inline-block;
+  font-size: var(--step-small);
+  color: oklch(0.962 0.006 90 / 0.72);
+  transition: color var(--dur-micro) var(--ease-out-expo);
+}
+
+.footer__list a:hover {
+  color: var(--washi);
+}
+
+.footer__colophon {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-block-start: var(--space-xl);
+  padding-block-start: var(--space-md);
+  border-top: 1px solid var(--sumi-line);
+  font-size: var(--step-label);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: oklch(0.962 0.006 90 / 0.5);
+}
+
+/* --- Spec rows -----------------------------------------------------------
+   Composition and provenance, set as a definition table. This is where the
+   brand proves its craft, so it gets real structure. */
+.spec {
+  display: grid;
+  grid-template-columns: minmax(7rem, 12rem) 1fr;
+  gap: var(--space-xs) var(--space-md);
+  padding-block: 1.25rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.spec:first-child {
+  border-top: 1px solid var(--rule);
+}
+
+.spec__key {
+  font-size: var(--step-label);
+  font-weight: 500;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.spec__value {
+  font-size: var(--step-small);
+  line-height: 1.7;
+  color: var(--ink);
+}
+
+/* --- Section furniture --------------------------------------------------- */
+.movement__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding-block: var(--space-lg) var(--space-md);
+}
+
+.spine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--step-label);
+  font-weight: 500;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  pointer-events: none;
+}
+
+.spine--left {
+  left: calc(var(--gutter) / 2.6);
+  writing-mode: vertical-rl;
+}
+
+.spine--right {
+  right: calc(var(--gutter) / 2.6);
+  writing-mode: vertical-rl;
+}
+
+@media (width <= 56rem) {
+  .spine {
+    display: none;
+  }
+}
+
+/* --- WebGL canvas host ---------------------------------------------------
+   The canvas is always behind content and never captures the pointer unless
+   a scene opts in. WebGL is enhancement; the DOM carries the meaning. */
+.gl-stage {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+
+.gl-stage canvas {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+}
