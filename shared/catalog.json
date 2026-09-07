@@ -1,0 +1,99 @@
+[
+  {
+    "slug": "botanika",
+    "index": "01",
+    "name": "Botanika",
+    "material": "Bawełna",
+    "printStyle": "Stempel",
+    "price": 49000,
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "variants": [
+      "Kobalt / ecru"
+    ],
+    "madeToOrder": true,
+    "leadTime": "10–15 dni roboczych",
+    "composition": "100% bawełna · płótno 280 g/m²",
+    "care": "Prać na lewej stronie w 30°C, delikatnie. Bez wybielacza i suszarki. Prasować nadruk przez tkaninę, od spodu.",
+    "summary": "Szeroka nogawka, naturalne płótno i roślinny ślad w kobalcie.",
+    "detail": "Motyw odbijany osobno na każdym fragmencie tkaniny. Drobne różnice w nasyceniu są częścią projektu.",
+    "slot": "botanika",
+    "alt": "Spodnie ecru z szerokimi nogawkami i kobaltowymi liśćmi odbijanymi stemplem.",
+    "tint": "#d7c9b0",
+    "cloth": {
+      "drape": 0.46,
+      "sheen": 0.08,
+      "weave": 0.8,
+      "weight": 280
+    }
+  },
+  {
+    "slug": "gest",
+    "index": "02",
+    "name": "Gest",
+    "material": "Bawełna",
+    "printStyle": "Pędzel",
+    "price": 52000,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "variants": [
+      "Kreda / granat"
+    ],
+    "madeToOrder": true,
+    "leadTime": "10–15 dni roboczych",
+    "composition": "100% bawełna · płótno 320 g/m²",
+    "care": "Prać na lewej stronie w 30°C, delikatnie. Bez wybielacza i suszarki. Prasować od spodu.",
+    "summary": "Granatowe płótno. Jasna linia prowadzona bez pośpiechu.",
+    "detail": "Swobodny krój i szeroki ślad pędzla. Układ dekoracji może różnić się między parami.",
+    "slot": "gest",
+    "alt": "Granatowe spodnie z szerokimi nogawkami i nieregularnymi jasnymi liniami pędzla.",
+    "tint": "#344b64",
+    "cloth": {
+      "drape": 0.38,
+      "sheen": 0.07,
+      "weave": 0.7,
+      "weight": 320
+    }
+  },
+  {
+    "slug": "forma",
+    "index": "03",
+    "name": "Forma",
+    "material": "Len",
+    "printStyle": "Szablon",
+    "price": 56000,
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L"
+    ],
+    "variants": [
+      "Glina / len"
+    ],
+    "madeToOrder": true,
+    "leadTime": "10–15 dni roboczych",
+    "composition": "100% len · 240 g/m²",
+    "care": "Prać delikatnie w 30°C na lewej stronie. Suszyć swobodnie. Prasować lekko wilgotne, od spodu.",
+    "summary": "Naturalny len i kompozycja w kolorze gliny i błękitu.",
+    "detail": "Prosty krój pozostawia miejsce na strukturę lnu. Każdy kształt nanoszony jest oddzielnie.",
+    "slot": "forma",
+    "alt": "Lniane spodnie w naturalnym kolorze z geometrycznym nadrukiem w odcieniach gliny i błękitu.",
+    "tint": "#c7ad82",
+    "cloth": {
+      "drape": 0.62,
+      "sheen": 0.1,
+      "weave": 0.92,
+      "weight": 240
+    }
+  }
+]

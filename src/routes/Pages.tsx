@@ -1,210 +1,76 @@
-import { useState, type FormEvent, type ReactNode } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
-import { Movement } from '../components/Movement'
-import { InkPlate } from '../components/InkPlate'
-import { Rise } from '../components/ScrollMotion'
-import { ClothStudy } from '../components/ClothStudy'
-import { SumiLink, useDocumentTitle } from '../components/Transition'
-import { garments, garmentBySlug, categoriesInUse, CATEGORY_LABELS, formatPrice, type Garment } from '../data/collection'
-import { house, process } from '../data/atelier'
-import { journal, entryBySlug, formatDate } from '../data/journal'
-import { useCart } from '../state/cart'
-import { APPOINTMENT_EMAIL, CATEGORY_PARAM, categoryRoute } from './manifest'
-
-function Title({ children, note }: { children: ReactNode; note: string }) {
-  return <header className="page-heading shell stack">
-    <p className="u-label">{note}</p>
-    <h1 id="route-title" tabIndex={-1} className="u-display">{children}</h1>
-  </header>
+import {useState,type FormEvent,type ReactNode} from 'react'
+import {Link,useParams,useSearchParams} from 'react-router-dom'
+import brand from '../../shared/brand.json'
+import {garments,garmentBySlug,filterGarments,formatPrice,type Garment} from '../data/collection'
+import {entries,entryBySlug,formatDate} from '../data/journal'
+import {processSteps} from '../data/atelier'
+import {useDocumentTitle,SiteLink} from '../components/Transition'
+import {PhotoPlate} from '../components/PhotoPlate'
+import {WorkshopSection} from '../components/WorkshopSection'
+import {Rise,Parallax,Wipe} from '../components/ScrollMotion'
+import {ClothStudy} from '../components/ClothStudy'
+import {CartLines} from '../components/Bag'
+import {useCart} from '../state/cart'
+import {useStore} from '../state/store'
+import {post} from '../lib/api'
+export function PageHeading({eyebrow,title,text}:{eyebrow:string;title:string;text?:string}) {
+ useDocumentTitle(title+' — '+brand.name)
+ return <header className="page-heading shell"><p className="eyebrow">{eyebrow}</p><h1 id="route-title" tabIndex={-1}>{title}</h1>{text&&<p className="intro">{text}</p>}</header>
 }
-
-function GarmentMovement({ garment, index = 0 }: { garment: Garment; index?: number }) {
-  return <Movement ground={index % 2 === 0 ? 'paper' : 'ink'} className="story-movement" labelledBy={`garment-${garment.slug}`} spine={garment.kanji}>
-    <div className="story-pair shell">
-      <SumiLink to={`/collection/${garment.slug}`} className="plate-link" aria-label={`View ${garment.name}`}>
-        <InkPlate slot={garment.slot} alt={garment.alt} />
-      </SumiLink>
-      <Rise className="story-copy stack">
-        <p className="u-label">{garment.index} / {CATEGORY_LABELS[garment.category]}</p>
-        <h2 className="u-headline" id={`garment-${garment.slug}`}>{garment.name}</h2>
-        <p>{garment.summary}</p>
-        <p className="u-small">{garment.composition}</p>
-        <p>{formatPrice(garment.price)}</p>
-        <SumiLink to={`/collection/${garment.slug}`} className="link-rule">Examine the garment</SumiLink>
-      </Rise>
-    </div>
-  </Movement>
+function Caption({children}:{children?:ReactNode}) {return <figcaption className="photo-caption">{children||'Ilustracja koncepcyjna AI · do zastąpienia fotografią produktu'}</figcaption>}
+export function ProductCard({product}:{product:Garment}) {
+ return <article className="product-card"><SiteLink className="product-card__photo" to={'/shop/'+product.slug} aria-label={'Obejrzyj '+product.name}><PhotoPlate slot={product.slot} alt={product.alt}/><span className="product-card__detail">Zbliż się do detalu ↗</span></SiteLink><div className="product-card__meta"><div><p className="eyebrow">{product.index} / {product.printStyle}</p><h3><SiteLink to={'/shop/'+product.slug}>{product.name}</SiteLink></h3><p className="small">{product.material} · szyte po zamówieniu</p></div><p>{formatPrice(product.price)}</p></div></article>
 }
-
+function ProcessStory() {return <WorkshopSection tone="ecru" id="process"><div className="shell process-story"><Wipe><figure><PhotoPlate slot="process" alt="Dłonie odciskające roślinny stempel w kobalcie na jasnej nogawce."/><Caption>Ilustracja koncepcyjna AI · proponowany proces nadruku</Caption></figure></Wipe><Rise><p className="eyebrow">Zanim założysz</p><h2>Różnica jest<br/><em>w rękach.</em></h2><p>Jedna matryca nie oznacza dwóch identycznych odbić. Nacisk dłoni, splot płótna, odrobina pigmentu. To właśnie te różnice chcemy zachować.</p><SiteLink to="/process" className="text-link">Zajrzyj do procesu <span>↗</span></SiteLink></Rise></div></WorkshopSection>}
 export function Home() {
-  useDocumentTitle('SUMI. Cloth, ink, and air.')
-  return <>
-    <Movement ground="void" className="home-opening" labelledBy="route-title">
-      <div className="home-opening__study" aria-hidden="true"><ClothStudy /></div>
-      <div className="home-opening__copy shell stack">
-        <p className="u-label">Collection 01 / Autumn and Winter</p>
-        <h1 className="u-display" id="route-title" tabIndex={-1}>Cloth, ink,<br />and air.</h1>
-        <p>Utsuroi. The imperceptible shifting of season and colour.</p>
-        <a className="link-rule" href="#first-garment">Unroll the collection</a>
-      </div>
-      <span className="home-opening__kanji u-vertical" lang="ja" aria-hidden="true">移ろい</span>
-    </Movement>
-    <div id="first-garment"><GarmentMovement garment={garments[0]} /></div>
-    <Movement className="story-movement" labelledBy="making-title" spine="縫う">
-      <div className="story-pair shell">
-        <InkPlate slot="atelier-sewing" alt={process[4].alt} />
-        <Rise className="story-copy stack">
-          <p className="u-label">The making / Sewing</p>
-          <h2 id="making-title" className="u-headline">Every seam<br />can be seen.</h2>
-          <p>{process[4].body}</p>
-          <SumiLink className="link-rule" to="/atelier">Inside the atelier</SumiLink>
-        </Rise>
-      </div>
-    </Movement>
-    <Movement ground="paper" className="closing-movement shell stack" labelledBy="collection-title">
-      <p className="u-label">Collection 01</p>
-      <h2 className="u-headline" id="collection-title">Utsuroi</h2>
-      <SumiLink className="link-rule" to="/collection">Read the whole collection</SumiLink>
-    </Movement>
-  </>
+ useDocumentTitle(brand.name+' — '+brand.tagline)
+ return <><section className="hero shell"><div className="hero__copy"><p className="eyebrow">Małe serie. Własny charakter.</p><h1 id="route-title" tabIndex={-1}>Nie ma<br/>drugiej<br/><em>takiej pary.</em></h1><p className="intro">Ręcznie dekorowane spodnie.<br/>Tkanina, kolor i ślad ludzkiej ręki.</p><SiteLink to="/shop" className="btn">Znajdź swoją parę <span>↗</span></SiteLink><a href="#process" className="hero__note">Od płótna do nadruku ↓</a></div><div className="hero__image"><figure><PhotoPlate slot="botanika" alt={garments[0].alt} eager/><Caption/></figure><span className="hero__label">01 / Botanika<br/>Kobalt na płótnie</span></div></section>
+ <div className="workflow shell"><span>01 / Wybrana tkanina</span><span>02 / Ręczny nadruk</span><span>03 / Twoja para</span></div>
+ <WorkshopSection><div className="shell"><Rise className="section-heading"><div><p className="eyebrow">Pierwsze ślady / kolekcja demonstracyjna</p><h2>Trzy sposoby<br/>na własny <em>charakter.</em></h2></div><SiteLink to="/shop" className="text-link">Wszystkie spodnie ↗</SiteLink></Rise><div className="collection-editorial">{garments.map(p=><Rise key={p.slug}><ProductCard product={p}/></Rise>)}</div></div></WorkshopSection>
+ <ProcessStory/><WorkshopSection><div className="shell journal-teaser"><div><p className="eyebrow">Notatki z pracowni</p><h2>Nie tylko<br/><em>gotowa rzecz.</em></h2><p>O tym, co dzieje się pomiędzy pomysłem a ostatnim szwem.</p><SiteLink to="/journal" className="text-link">Czytaj notatki ↗</SiteLink></div><Parallax><figure><PhotoPlate slot="gest" alt={garments[1].alt} detail/><Caption/></figure></Parallax></div></WorkshopSection></>
 }
-
 export function Collection() {
-  useDocumentTitle('Utsuroi — Collection 01 / SUMI')
-  const [params, setParams] = useSearchParams()
-  const requested = params.get(CATEGORY_PARAM)
-  const category = categoriesInUse.find((value) => value === requested)
-  const shown = category ? garments.filter((garment) => garment.category === category) : garments
-  function filter(value: string) {
-    setParams((previous) => {
-      const next = new URLSearchParams(previous)
-      if (value) next.set(CATEGORY_PARAM, value)
-      else next.delete(CATEGORY_PARAM)
-      return next
-    })
-  }
-  return <>
-    <Movement ground="ink">
-      <Title note="Collection 01 / Autumn and Winter">Utsuroi</Title>
-      <div className="collection-filter shell">
-        <div className="chips" role="group" aria-label="Filter garments">
-          <button className="chip" type="button" aria-pressed={!category} onClick={() => filter('')}>All</button>
-          {categoriesInUse.map((value) => <button className="chip" type="button" key={value} aria-pressed={category === value} onClick={() => filter(value)}>{CATEGORY_LABELS[value]}</button>)}
-        </div>
-        <p className="u-small" role="status">{shown.length} {shown.length === 1 ? 'garment' : 'garments'}</p>
-      </div>
-    </Movement>
-    {shown.map((garment, index) => <GarmentMovement key={garment.slug} garment={garment} index={index} />)}
-  </>
+ const [params,setParams]=useSearchParams(),products=filterGarments(params)
+ const filters=[{key:'material',label:'Materiał',values:[...new Set(garments.map(p=>p.material))]},{key:'print',label:'Technika',values:[...new Set(garments.map(p=>p.printStyle))]},{key:'size',label:'Rozmiar',values:['XS','S','M','L','XL']}]
+ return <><PageHeading eyebrow="Kolekcja / pierwsze ślady" title="Wybierz swój ślad." text="Bawełna lub len. Stempel, pędzel albo szablon. Każdy projekt zostawia miejsce na ręczną pracę."/><div className="shell filters">{filters.map(f=><label className="field" key={f.key}>{f.label}<select value={params.get(f.key)||''} onChange={e=>{const next=new URLSearchParams(params);if(e.target.value)next.set(f.key,e.target.value);else next.delete(f.key);setParams(next,{replace:true})}}><option value="">Wszystkie</option>{f.values.map(v=><option key={v}>{v}</option>)}</select></label>)}<button className="text-button" onClick={()=>setParams({},{replace:true})}>Wyczyść filtry</button><p role="status" className="small">Projekty: {products.length}</p></div>
+ <section className="shell section"><p className="small demo-copy">Kolekcja demonstracyjna. Ceny, materiały, wymiary i zdjęcia wymagają zatwierdzenia przed sprzedażą.</p>{products.length?<div className="shop-grid">{products.slice(0,2).map(p=><ProductCard key={p.slug} product={p}/>)}</div>:<p className="empty">Nie ma pary pasującej do tych filtrów. Zmień wybór lub wyczyść filtry.</p>}</section>
+ <ProcessStory/>{products.length>2&&<section className="shell section shop-last"><ProductCard product={products[2]}/><div><p className="eyebrow">Mniej, ale po swojemu</p><h2>Najpierw pomysł.<br/>Potem <em>Twoja para.</em></h2><p>Szycie po zamówieniu daje czas na przygotowanie tkaniny i dekoracji. Przewidywany termin widzisz przy każdym projekcie.</p><SiteLink className="text-link" to="/faq">Jak działa zamówienie? ↗</SiteLink></div></section>}</>
 }
-
-export function Product() {
-  const { slug = '' } = useParams()
-  const garment = garmentBySlug(slug)
-  return garment ? <ProductDetail key={garment.slug} garment={garment} /> : <NotFound />
+export function Product() {const {slug}=useParams();const product=garmentBySlug(slug);return product?<ProductDetail key={product.slug} product={product}/>:<NotFound/>}
+function ProductDetail({product:p}:{product:Garment}) {
+ const {add}=useCart(),[size,setSize]=useState(''),[variant,setVariant]=useState(p.variants[0]),[view,setView]=useState('full')
+ useDocumentTitle(p.name+' — '+brand.name)
+ const submit=(e:FormEvent)=>{e.preventDefault();if(size)add({slug:p.slug,size,variant,quantity:1})}
+ return <><div className="shell breadcrumb"><SiteLink to="/shop">Spodnie</SiteLink><span>/ {p.name}</span></div><section className="shell product-layout"><div className="product-gallery"><figure><PhotoPlate key={view} slot={view==='process'?'process':p.slot} alt={view==='process'?'Koncepcja ręcznego nadruku roślinnego stemplem.':p.alt} detail={view==='detail'} eager/><Caption>{view==='process'?'Ilustracja AI · inspiracja procesu, nie dokumentacja tej pary':undefined}</Caption></figure><div className="gallery-controls" role="group" aria-label="Widok produktu">{[{id:'full',label:'Cała para'},{id:'detail',label:'Detal'},{id:'process',label:'Inspiracja procesu'}].map(v=><button key={v.id} aria-pressed={view===v.id} onClick={()=>setView(v.id)}>{v.label}</button>)}</div></div>
+ <div className="product-info"><p className="eyebrow">{p.index} / {p.printStyle}</p><h1 id="route-title" tabIndex={-1}>{p.name}</h1><p className="product-price">{formatPrice(p.price)}</p><p className="intro">{p.summary}</p><p>{p.detail}</p><p className="availability">Szyte po zamówieniu · {p.leadTime}</p><form onSubmit={submit}><fieldset><legend>Rozmiar</legend><div className="size-options">{p.sizes.map(s=><label key={s}><input type="radio" name="size" value={s} checked={s===size} required onChange={()=>setSize(s)}/><span>{s}</span></label>)}</div><Link className="small" to="/size-guide">Sprawdź wymiary w centymetrach ↗</Link></fieldset><fieldset><legend>Wariant</legend>{p.variants.map(v=><label className="check" key={v}><input type="radio" name="variant" value={v} checked={variant===v} onChange={()=>setVariant(v)}/><span>{v}</span></label>)}</fieldset><button className="btn">Dodaj do koszyka <span>+</span></button></form><p className="small demo-copy">Projekt i dane demonstracyjne. Płatności wyłączone.</p>
+ <details open><summary>Materiał i pielęgnacja</summary><p>{p.composition}</p><p>{p.care}</p></details><details><summary>Czas wykonania i dostawa</summary><p>Przewidywane szycie: {p.leadTime}, liczone po uzgodnieniu zamówienia. Kurier w Polsce: 19 zł, przewidywane 1–3 dni robocze od wysyłki. Odbiór po uzgodnieniu: bez opłaty.</p><Link to="/shipping-returns">Dostawa i zwroty →</Link></details></div></section>
+ <WorkshopSection tone="ecru"><div className="shell material-story"><div><p className="eyebrow">Poczuj strukturę</p><h2>Tkanina ma<br/><em>swój rytm.</em></h2><p>{p.composition}. {p.detail}</p><p className="small">Opcjonalne studium 3D pokazuje ruch drukowanej tkaniny. Jest ilustracją, nie symulacją kroju ani dowodem właściwości produktu.</p></div><div className="material-visual"><PhotoPlate slot={p.slot} alt={p.alt} detail/><ClothStudy cloth={p.cloth} tint={p.tint}/></div></div></WorkshopSection>
+ <section className="shell section"><h2>Inny ślad, ten sam zamiar.</h2><div className="related-grid">{garments.filter(g=>g.slug!==p.slug).map(g=><ProductCard product={g} key={g.slug}/>)}</div></section></>
 }
-
-function ProductDetail({ garment }: { garment: Garment }) {
-  useDocumentTitle(`${garment.name} / SUMI`)
-  const { add } = useCart()
-  const [size, setSize] = useState('')
-  const [colourName, setColourName] = useState(garment.colourways[0].name)
-  const colour = garment.colourways.find((entry) => entry.name === colourName)!
-  function addToBag(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (!garment.sizes.includes(size)) return
-    add({ slug: garment.slug, name: garment.name, size, colour: colour.name, price: garment.price, slot: garment.slot, alt: garment.alt })
-  }
-  return <>
-    <Movement>
-      <Title note={`Collection 01 / ${garment.index}`}>{garment.name}</Title>
-      <div className="product-layout shell">
-        <InkPlate slot={garment.slot} alt={garment.alt} priority static />
-        <div className="story-copy stack">
-          <p className="u-lede">{garment.summary}</p>
-          <p>{formatPrice(garment.price)}</p>
-          <form className="stack" onSubmit={addToBag}>
-            <fieldset className="stack compact-stack"><legend>Colour — {colour.romaji}</legend>
-              <div className="choices">{garment.colourways.map((option) => <label className="choice" key={option.name}>
-                <input type="radio" name="colour" value={option.name} checked={option.name === colourName} onChange={() => setColourName(option.name)} />
-                <span>{option.name}</span>
-              </label>)}</div>
-            </fieldset>
-            <div className="stack compact-stack">
-              <label htmlFor="garment-size">Size</label>
-              <select id="garment-size" className="field__input" value={size} required onChange={(event) => setSize(event.target.value)}>
-                <option value="" disabled>Select a size</option>
-                {garment.sizes.map((value) => <option key={value} value={value}>{value}</option>)}
-              </select>
-              <a className="link-rule" href={`mailto:${APPOINTMENT_EMAIL}?subject=${encodeURIComponent(`Sizing — ${garment.name}`)}`}>Ask about measurements</a>
-            </div>
-            <button className="btn btn--primary" type="submit"><span className="btn__label">Add to bag</span></button>
-          </form>
-          <p className="u-small">The bag prepares an enquiry to the atelier. No payment is taken here.</p>
-        </div>
-      </div>
-    </Movement>
-    <Movement ground="paper" className="story-movement shell" labelledBy="construction-title">
-      <div className="reading stack">
-        <p className="u-label">Material and construction</p>
-        <h2 className="u-headline" id="construction-title">The hand of the cloth.</h2>
-        <dl>
-          {([['Composition', garment.composition], ['Weight', garment.cloth.weight], ['Origin', garment.origin], ['Care', garment.care]] as const).map(([key, value]) => <div className="spec" key={key}><dt className="spec__key">{key}</dt><dd className="spec__value">{value}</dd></div>)}
-        </dl>
-        {garment.detail.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-      </div>
-    </Movement>
-    <Movement ground="void" className="closing-movement shell stack" labelledBy="cloth-title">
-      <h2 className="u-headline" id="cloth-title">Cloth study</h2>
-      <p>{garment.composition} {garment.cloth.weight}.</p>
-      <p className="u-small">A study of drape and light. Refer to the garment photograph for its cut.</p>
-      <ClothStudy cloth={garment.cloth} tint={colour.hex} />
-      <SumiLink className="link-rule" to={categoryRoute(garment.category)}>Return to {CATEGORY_LABELS[garment.category].toLowerCase()}</SumiLink>
-    </Movement>
-  </>
+export function Atelier() {return <><PageHeading eyebrow="Jak powstają" title="Od kawałka płótna." text="Materiał, ręczny ślad, krój i wykończenie. Cztery etapy, którym chcemy dać tyle samo uwagi."/><p className="shell small demo-copy">Proponowana opowieść o procesie. Ilustracje AI i opis należy zastąpić dokumentacją rzeczywistej pracowni.</p>{processSteps.map((s,i)=><WorkshopSection key={s.title} tone={i%2?'canvas':'ecru'}><div className={'shell process-step '+(i%2?'reverse':'')}><Wipe><figure><PhotoPlate slot={s.slot} alt={s.slot==='process'?'Odbijanie roślinnego wzoru na płótnie.':garmentBySlug(s.slot)!.alt}/><Caption/></figure></Wipe><Rise><p className="eyebrow">0{i+1} / proces</p><h2>{s.title}</h2><p className="intro">{s.text}</p>{i===2&&<SiteLink className="text-link" to="/size-guide">Jak dobrać rozmiar ↗</SiteLink>}</Rise></div></WorkshopSection>)}<WorkshopSection><div className="shell material-story"><div><p className="eyebrow">Splot i ruch</p><h2>Materiał<br/><em>nie stoi w miejscu.</em></h2><p>Drukowana powierzchnia reaguje na światło i ułożenie. To proceduralna ilustracja tkaniny; zdjęcie i opis pozostają dostępne także bez animacji.</p><SiteLink to="/shop" className="btn">Zobacz projekty ↗</SiteLink></div><div className="material-visual"><PhotoPlate slot="forma" alt={garments[2].alt}/><ClothStudy/></div></div></WorkshopSection></>}
+export function Journal() {return <><PageHeading eyebrow="Notatki z pracowni" title="Pomiędzy szwami." text="Krótkie historie o materiale, dekoracji i tym, co zostaje w gotowej parze."/><section className="shell section journal-list">{entries.map(e=><article key={e.slug}><SiteLink to={'/journal/'+e.slug}><PhotoPlate slot={e.slot} alt={e.alt}/></SiteLink><div><p className="eyebrow">{e.field} / {formatDate(e.date)}</p><h2><SiteLink to={'/journal/'+e.slug}>{e.title}</SiteLink></h2><p>{e.standfirst}</p><SiteLink to={'/journal/'+e.slug} className="text-link">Czytaj notatkę ↗</SiteLink></div></article>)}</section></>}
+export function JournalArticle() {const {slug}=useParams(),entry=entryBySlug(slug);if(!entry)return <NotFound/>;return <><PageHeading eyebrow={entry.field+' / '+formatDate(entry.date)} title={entry.title} text={entry.standfirst}/><article className="shell article"><figure><PhotoPlate slot={entry.slot} alt={entry.alt} eager/><Caption/></figure><div className="reading">{entry.body.map(p=><p key={p}>{p}</p>)}<SiteLink to="/journal" className="text-link">← Wszystkie notatki</SiteLink></div></article></>}
+export function CartPage() {const {total,lines}=useCart();return <><PageHeading eyebrow="Koszyk" title="Twoje wybory." text="Przed zapisem zamówienia sprawdzimy ceny i koszt dostawy na serwerze."/><section className="shell section cart-page"><CartLines/>{!!lines.length&&<aside className="order-summary"><p className="total"><strong>Produkty</strong><strong>{formatPrice(total)}</strong></p><p>Dostawa od 0 zł (odbiór po uzgodnieniu) lub kurier 19 zł.</p><Link className="btn" to="/checkout">Przejdź do zamówienia →</Link><p className="small">Bez płatności na stronie.</p></aside>}</section></>}
+export function SizeGuide() {return <><PageHeading eyebrow="Rozmiary / centymetry" title="Zacznij od miarki." text="Porównaj wymiary z dobrze leżącą parą spodni. Litera na metce to dopiero początek."/><section className="shell section reading"><p className="notice">Tabela demonstracyjna. Przed sprzedażą wymaga zastąpienia rzeczywistymi pomiarami każdego kroju. To wymiary spodni, nie ciała.</p><div className="table-scroll" role="region" aria-label="Tabela rozmiarów" tabIndex={0}><table><caption>Przykładowe wymiary gotowej pary w cm</caption><thead><tr>{['Rozmiar','Pas (obwód)','Biodra (obwód)','Stan przód','Nogawka wewn.'].map(h=><th scope="col" key={h}>{h}</th>)}</tr></thead><tbody>{[['XS',68,94,31,74],['S',74,100,32,75],['M',80,106,33,76],['L',86,112,34,77],['XL',92,118,35,78]].map(row=><tr key={row[0]}><th scope="row">{row[0]}</th>{row.slice(1).map((v,i)=><td key={i}>{v}</td>)}</tr>)}</tbody></table></div><h2>Jak mierzyć</h2><ol><li>Połóż spodnie płasko, bez rozciągania. Zmierz szerokość pasa i pomnóż przez dwa.</li><li>Biodra zmierz w najszerszym miejscu i również pomnóż wynik przez dwa.</li><li>Stan przedni to odległość od szwu w kroku do górnej krawędzi pasa.</li><li>Wewnętrzną nogawkę mierz od kroku do końca nogawki.</li></ol><p>Elastyczny pas potrzebuje dodatkowego wymiaru po rozciągnięciu — zostanie dodany wraz z zatwierdzonymi pomiarami Botanik i Gestu.</p><Link to="/contact" className="text-link">Zapytaj o dopasowanie ↗</Link></section></>}
+const faqs=[
+['Czy każda para wygląda tak samo?','Ręcznie nanoszona dekoracja może różnić się położeniem i nasyceniem. Rzeczywiste zdjęcia przed premierą powinny pokazać zakres tych różnic.'],
+['Ile trwa wykonanie?','W kolekcji demonstracyjnej zakładamy 10–15 dni roboczych od uzgodnienia zamówienia. Pracownia musi potwierdzić termin przed przyjęciem do realizacji.'],
+['Czy muszę teraz zapłacić?','Nie. Formularz zapisuje zamówienie oczekujące na uzgodnienie. Płatności oraz automatyczne wiadomości e-mail nie są jeszcze aktywne.'],
+['Jak prać ręczny nadruk?','Sprawdź instrukcję konkretnej pary. Dla danych demonstracyjnych: delikatne pranie w 30°C na lewej stronie, bez wybielacza i suszarki, prasowanie od spodu.'],
+['Czy spodnie szyte po zamówieniu można zwrócić?','Samo szycie po złożeniu zamówienia nie oznacza automatycznego wyłączenia prawa odstąpienia. Znaczenie może mieć wykonanie według indywidualnej specyfikacji. Szczegóły opisujemy w projekcie zasad dostawy i zwrotów.'],
+['Nie wiem, jaki rozmiar wybrać.','Zacznij od tabeli centymetrów i pomiaru własnych spodni. Obecna tabela jest demonstracyjna. Przed zakupem potrzebne będą pomiary konkretnego modelu.']]
+export function FAQ() {return <><PageHeading eyebrow="Pomoc" title="Dobrze wiedzieć." text="O wyborze pary, zamówieniu i życiu nadruku po pierwszym praniu."/><section className="shell section reading">{faqs.map(([q,a])=><details key={q}><summary>{q}</summary><p>{a}</p></details>)}<p><Link to="/contact">Masz inne pytanie? Napisz →</Link></p></section></>}
+export function Contact() {
+ const {config}=useStore(),[status,setStatus]=useState(''),[busy,setBusy]=useState(false)
+ async function submit(e:FormEvent<HTMLFormElement>) {e.preventDefault();if(busy)return;const data=new FormData(e.currentTarget);setBusy(true);setStatus('');try{await post('/api/contact',{name:data.get('name'),email:data.get('email'),message:data.get('message'),acknowledged:data.get('acknowledged')==='on'});setStatus('Wiadomość została zapisana. Automatyczna wysyłka e-mail nie jest jeszcze aktywna.')}catch(e){setStatus((e as Error).message)}finally{setBusy(false)}}
+ return <><PageHeading eyebrow="Kontakt" title="Porozmawiajmy o parze." text="Masz pytanie o krój, tkaninę lub zamówienie? Zostaw wiadomość."/><section className="shell section contact-grid"><div><h2>Prosto do pracowni.</h2>{config?.seller.email?<a href={'mailto:'+config.seller.email}>{config.seller.email}</a>:<p>Dane kontaktowe pracowni zostaną uzupełnione przed premierą.</p>}<p className="small">W wersji demonstracyjnej użyj danych testowych. Formularz zapisuje wiadomości w bazie; nie wysyła ich pocztą.</p></div><form onSubmit={submit}><label className="field">Imię i nazwisko<input name="name" autoComplete="name" required minLength={2} maxLength={100}/></label><label className="field">E-mail<input name="email" type="email" autoComplete="email" required maxLength={254}/></label><label className="field">Wiadomość<textarea name="message" required minLength={10} maxLength={4000}/></label><label className="check"><input type="checkbox" name="acknowledged" required/><span>Zapoznałem/am się z <Link to="/privacy">informacją o prywatności</Link>.</span></label><button className="btn" disabled={busy}>{busy?'Zapisujemy…':'Zapisz wiadomość →'}</button><p role="status">{status}</p></form></section></>
 }
-
-export function Atelier() {
-  useDocumentTitle('Atelier / SUMI')
-  return <>
-    <Movement><Title note={`${house.city} / ${house.district} / Since ${house.founded}`}>The atelier</Title><p className="route-intro shell">{house.statement}</p></Movement>
-    {process.map((step, index) => <Movement key={step.index} ground={index % 2 === 0 ? 'paper' : 'ink'} className="story-movement" labelledBy={`process-${step.index}`} spine={step.ja}>
-      <div className="story-pair shell">
-        <InkPlate slot={step.slot} alt={step.alt} />
-        <Rise className="story-copy stack"><p className="u-label">{step.index} / {step.romaji}</p><h2 className="u-headline" id={`process-${step.index}`}>{step.title}</h2><p>{step.body}</p></Rise>
-      </div>
-    </Movement>)}
-    <Movement className="closing-movement shell stack" labelledBy="visit-title"><h2 className="u-headline" id="visit-title">By appointment.</h2><p>{house.visit.line1}</p><p>{house.visit.line2}</p><a className="link-rule" href={`mailto:${APPOINTMENT_EMAIL}`}>Arrange a visit</a></Movement>
-  </>
+export function Legal({kind}:{kind:'terms'|'privacy'|'shipping-returns'}) {
+ const {config}=useStore()
+ const title=kind==='terms'?'Warunki zamówienia.':kind==='privacy'?'Twoja prywatność.':'Dostawa i zwroty.'
+ return <><PageHeading eyebrow="Informacje / projekt do zatwierdzenia" title={title}/><article className="shell section reading"><p className="notice">Projekt dokumentu do uzupełnienia i weryfikacji prawnej przed publicznym uruchomieniem. Obecna kolekcja, ceny i terminy są demonstracyjne.</p>
+ <h2>Dane pracowni</h2>{config?.seller.name?<p>{config.seller.name}<br/>{config.seller.address}<br/>{config.seller.email}</p>:<p>Wymagane przed premierą: pełna nazwa sprzedawcy i administratora danych, adres, identyfikatory rejestrowe oraz adres e-mail.</p>}
+ {kind==='terms'?<><h2>Zapis i potwierdzenie</h2><p>Wybierz model, rozmiar i wariant, podaj dane i sprawdź podsumowanie. Ceny w PLN i koszt dostawy są weryfikowane przez serwer. Przycisk zapisu tworzy zgłoszenie oczekujące na uzgodnienie; sam zapis nie oznacza przyjęcia do realizacji ani pobrania płatności.</p><p>Pracownia musi potwierdzić specyfikację, całkowitą cenę, podatki i termin przed zawarciem umowy. Sposób zawarcia umowy oraz płatności wymaga zatwierdzenia przed uruchomieniem sprzedaży.</p><h2>Wykonanie i reklamacje</h2><p>Przykładowy termin szycia wynosi 10–15 dni roboczych od uzgodnienia. Różnice w nadruku należy opisać i pokazać przed zawarciem umowy; nie wyłączają one odpowiedzialności za niezgodność towaru z umową.</p><p>Procedura reklamacji, dane zgłoszeniowe i informacje o pozasądowych sposobach rozwiązywania sporów wymagają uzupełnienia.</p><Link to="/shipping-returns">Zasady dostawy i odstąpienia →</Link></>:kind==='privacy'?<><h2>Jakie dane zapisujemy</h2><p>Formularz zamówienia zapisuje imię i nazwisko, e-mail, adres dla dostawy kurierskiej, uwagi i wybrane produkty. Formularz kontaktowy zapisuje wiadomość i dane kontaktowe. Zapis newslettera przechowuje adres, treść zgody, wersję informacji i datę; wysyłka nie jest aktywna.</p><h2>Pamięć przeglądarki</h2><p>Koszyk zapisuje się lokalnie na urządzeniu. Dane niezakończonej próby zamówienia i prywatny klucz potwierdzenia przechowujemy w pamięci bieżącej sesji karty. Zamknięcie sesji może usunąć dostęp do potwierdzenia. Nie umieszczamy klucza w adresie strony.</p><h2>Cel i podstawa</h2><p>Dane zamówienia i kontaktu służą obsłudze zapytania oraz działaniom przed zawarciem umowy. Ewentualna wysyłka marketingowa wymaga odrębnej zgody. Nie stosujemy analityki ani reklamowych trackerów.</p><h2>Do uzupełnienia przed premierą</h2><p>Administrator musi zatwierdzić podstawy prawne dla każdego celu, okresy retencji, odbiorców danych, dostawców hostingu i poczty, ewentualne transfery poza EOG oraz kontakt do realizacji praw. Należy opisać prawo dostępu, sprostowania, usunięcia, ograniczenia, przenoszenia, sprzeciwu i wycofania zgody w odpowiednim zakresie oraz skargi do Prezesa UODO.</p></>:<><h2>Wykonanie i dostawa</h2><p>Przykładowy czas wykonania: 10–15 dni roboczych po uzgodnieniu zamówienia. Kurier na terenie Polski: 19 zł i przewidywane 1–3 dni robocze od wysyłki. Odbiór po wcześniejszym uzgodnieniu: 0 zł. Adres odbioru wymaga uzupełnienia.</p><h2>Odstąpienie od umowy</h2><p>Przy sprzedaży na odległość konsumentowi co do zasady przysługuje 14 dni na odstąpienie od umowy. Samo wykonanie produktu po zamówieniu nie wyłącza automatycznie tego prawa. Wyjątek może dotyczyć towaru nieprefabrykowanego wykonanego według specyfikacji konsumenta lub służącego zaspokojeniu jego zindywidualizowanych potrzeb.</p><p>Przed sprzedażą trzeba ocenić konkretny model i sposób personalizacji oraz jasno poinformować o warunkach. Nie zakładamy, że każda para szyta po zamówieniu jest bezzwrotna.</p><p>Źródła do weryfikacji: <a href="https://prawakonsumenta.uokik.gov.pl/prawo-odstapienia-od-umowy/">UOKiK — odstąpienie</a> i <a href="https://prawakonsumenta.uokik.gov.pl/prawo-odstapienia-od-umowy/wylaczenia-prawa-do-odstapienia/">wyjątki</a>.</p><h2>Reklamacja to osobna sprawa</h2><p>Wyłączenie odstąpienia nie usuwa uprawnień dotyczących niezgodności towaru z umową. <a href="https://prawakonsumenta.uokik.gov.pl/reklamacja/niezgodnosc/">Informacje UOKiK</a>.</p><p>Do zatwierdzenia: adres zwrotów {config?.seller.returnsAddress||'(nieuzupełniony)'}, formularz odstąpienia, koszty i procedura odesłania, zasady zwrotu środków oraz tryb reklamacji.</p></>}
+ </article></>
 }
-
-export function Journal() {
-  useDocumentTitle('Journal / SUMI')
-  return <>
-    <Movement><Title note="Notes on material and method">Journal</Title></Movement>
-    {journal.map((entry, index) => <Movement ground={index % 2 === 0 ? 'paper' : 'ink'} key={entry.slug} className="story-movement" labelledBy={`entry-${entry.slug}`}>
-      <div className="story-pair shell">
-        <SumiLink to={`/journal/${entry.slug}`} className="plate-link" aria-label={`Read ${entry.title}`}><InkPlate slot={entry.slot} alt={entry.alt} /></SumiLink>
-        <div className="story-copy stack"><p className="u-label">{entry.field} / <time dateTime={entry.date}>{formatDate(entry.date)}</time></p><h2 id={`entry-${entry.slug}`} className="u-headline">{entry.title}</h2><p>{entry.standfirst}</p><SumiLink className="link-rule" to={`/journal/${entry.slug}`}>Read the note</SumiLink></div>
-      </div>
-    </Movement>)}
-  </>
-}
-
-export function JournalArticle() {
-  const { slug = '' } = useParams()
-  const entry = entryBySlug(slug)
-  useDocumentTitle(entry ? `${entry.title} / Journal / SUMI` : 'Not found / SUMI')
-  if (!entry) return <NotFound />
-  return <article>
-    <Movement><Title note={`${entry.field} / ${formatDate(entry.date)}`}>{entry.title}</Title><p className="route-intro shell">{entry.standfirst}</p></Movement>
-    <Movement ground="paper" className="story-movement shell">
-      <div className="reading stack"><InkPlate slot={entry.slot} alt={entry.alt} priority />{entry.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}<blockquote className="u-title">{entry.pullQuote.en}</blockquote><SumiLink className="link-rule" to="/journal">Return to the journal</SumiLink></div>
-    </Movement>
-  </article>
-}
-
-export function NotFound() {
-  useDocumentTitle('Not found / SUMI')
-  return <Movement className="not-found"><Title note="404">This page is absent.</Title><div className="shell"><SumiLink className="link-rule" to="/collection">Return to the collection</SumiLink></div></Movement>
-}
+export function NotFound() {return <><PageHeading eyebrow="404 / zgubiony ścieg" title="Ta strona się spruła." text="Pod tym adresem niczego nie ma. Wróć do kolekcji — tam wszystkie szwy są na swoim miejscu."/><div className="shell section"><SiteLink className="btn" to="/shop">Zobacz spodnie ↗</SiteLink></div></>}

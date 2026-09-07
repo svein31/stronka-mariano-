@@ -1,0 +1,19 @@
+{
+  "maxQuantity": 10,
+  "maxLines": 20,
+  "policyVersion": "draft-2026-09-07",
+  "shipping": [
+    {
+      "id": "courier",
+      "label": "Kurier — Polska",
+      "price": 1900,
+      "description": "Po zakończeniu szycia: przewidywane 1–3 dni robocze."
+    },
+    {
+      "id": "pickup",
+      "label": "Odbiór po uzgodnieniu",
+      "price": 0,
+      "description": "Miejsce i termin ustalimy przed przyjęciem zamówienia."
+    }
+  ]
+}

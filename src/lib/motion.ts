@@ -27,11 +27,10 @@ export function registerMotion(): void {
    Unhurried by design. Reveals sit between 0.9s and 1.4s. Nothing in this
    system bounces or elastically overshoots. */
 export const DUR = {
-  seal: 0.26,
   micro: 0.32,
   hover: 0.42,
-  reveal: 1.1,
-  slow: 1.4,
+  reveal: 0.85,
+  slow: 1,
 } as const
 
 export const EASE = {
@@ -172,7 +171,7 @@ export function revealUp(
 }
 
 /**
- * Clip-path reveal for plates. The image is uncovered from the bottom edge
+ * Transform and opacity reveal for plates. The image is uncovered from the bottom edge
  * while the media itself counter-scales, so the frame appears to open rather
  * than slide.
  */
@@ -187,8 +186,8 @@ export function revealPlate(
   const timeline = gsap.timeline()
   timeline.fromTo(
     plate,
-    { clipPath: 'inset(0% 0% 100% 0%)' },
-    { clipPath: 'inset(0% 0% 0% 0%)', duration, ease: EASE.inOutQuart },
+    { y: 30, opacity: 0 },
+    { y: 0, opacity: 1, duration, ease: EASE.inOutQuart },
   )
   timeline.fromTo(
     media,

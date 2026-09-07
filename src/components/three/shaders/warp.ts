@@ -1,28 +1,18 @@
-/* ==========================================================================
-   Warp. The threads on the loom.
 
-   Real instanced geometry rather than a drawn-on effect, because the point of
-   the scene is that the shed opens: alternate threads sit forward and back,
-   and the cursor pushes them further apart so light comes in through the gap.
-   That only reads as three-dimensional if the threads actually have depth.
-
-   Each thread is shaded as a cylinder, which is what a thread is. Roundness
-   comes from the across-thread coordinate, not from a normal map.
-   ========================================================================== */
 
 import * as THREE from 'three'
 import { SHADER_PALETTE } from './palette'
 import { SIMPLEX_NOISE_GLSL } from './noise'
 
 export interface WarpUniforms {
-  /* ShaderMaterial wants a string index signature on its uniform map. */
+
   [uniform: string]: THREE.IUniform
   uTime: { value: number }
-  /** Cursor in group-local world space, on the plane of the warp. */
+
   uPointer: { value: THREE.Vector3 }
-  /** 0 to 1. How hard the shed is being opened. */
+
   uGust: { value: number }
-  /** 0 to 1. Scroll progress, which combs a wave down the warp. */
+
   uScroll: { value: number }
   uOpacity: { value: number }
   uThread: { value: THREE.Color }
@@ -30,7 +20,7 @@ export interface WarpUniforms {
   uIndigo: { value: THREE.Color }
 }
 
-export const WARP_VERTEX = /* glsl */ `
+export const WARP_VERTEX =  `
 ${SIMPLEX_NOISE_GLSL}
 
 uniform float uTime;
@@ -38,7 +28,6 @@ uniform vec3  uPointer;
 uniform float uGust;
 uniform float uScroll;
 
-/* Per-instance identity, 0 to 1. Carries the phase and slub of one thread. */
 attribute float aSeed;
 
 varying float vAlong;
@@ -96,7 +85,7 @@ void main() {
 }
 `
 
-export const WARP_FRAGMENT = /* glsl */ `
+export const WARP_FRAGMENT =  `
 uniform vec3  uThread;
 uniform vec3  uGlow;
 uniform vec3  uIndigo;
@@ -143,14 +132,9 @@ void main() {
 }
 `
 
-/**
- * Undyed cotton in a raking light. Neither the ink hairline nor the paper
- * hairline on its own spans enough range to read as a lit cylinder, so the
- * thread colour sits between them and the shader's key term does the rest.
- */
 function threadColour(): THREE.Color {
-  return new THREE.Color(SHADER_PALETTE.sumiLine).lerp(
-    new THREE.Color(SHADER_PALETTE.washiLine),
+  return new THREE.Color(SHADER_PALETTE.charcoal).lerp(
+    new THREE.Color(SHADER_PALETTE.line),
     0.68,
   )
 }
@@ -163,8 +147,8 @@ export function createWarpUniforms(): WarpUniforms {
     uScroll: { value: 0 },
     uOpacity: { value: 1 },
     uThread: { value: threadColour() },
-    uGlow: { value: new THREE.Color(SHADER_PALETTE.kin) },
-    uIndigo: { value: new THREE.Color(SHADER_PALETTE.ai) },
+    uGlow: { value: new THREE.Color(SHADER_PALETTE.clay) },
+    uIndigo: { value: new THREE.Color(SHADER_PALETTE.indigo) },
   }
 }
 

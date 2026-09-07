@@ -1,17 +1,4 @@
-/* ==========================================================================
-   Route transitions.
 
-   Ink sweeps up from the bottom edge, the seal lands once the viewport is
-   covered, the route changes underneath, then the ink clears downward. One
-   panel, two movements, and the visitor is never shown a half-built page.
-
-   Three things this file owns that are easy to forget:
-   1. Focus moves to the new page title, because a route change is a context
-      change and a screen reader needs to be told.
-   2. Scroll memory, so the back button returns to where the visitor was
-      rather than to the top of a long scroll.
-   3. Reduced motion skips the veil entirely and navigates immediately.
-   ========================================================================== */
 
 import {
   createContext,
@@ -29,15 +16,15 @@ import { createPath, Link, useLocation, useNavigate, useNavigationType, useResol
 import gsap from 'gsap'
 import { useCapabilities } from '../lib/capabilities'
 import { EASE } from '../lib/motion'
-import { Seal } from './Seal'
+import brand from '../../shared/brand.json'
 
-const COVER = 0.62
-const CLEAR = 0.78
-const HOLD = 0.16
+const COVER = 0.2
+const CLEAR = 0.24
+const HOLD = 0.02
 
 interface TransitionValue {
   travel: (to: string) => void
-  /** True while the veil is covering the viewport. */
+
   traveling: boolean
 }
 
@@ -54,7 +41,6 @@ export function useTransitioning(): boolean {
   return useContext(TransitionContext).traveling
 }
 
-/** Scroll positions keyed by history entry, so back returns to the right fold. */
 const scrollMemory = new Map<string, number>()
 
 export function TransitionProvider({ children }: { children: ReactNode }) {
@@ -64,7 +50,7 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
   const { reducedMotion, scroll, requestRefresh } = useCapabilities()
 
   const veilRef = useRef<HTMLDivElement>(null)
-  const sealRef = useRef<HTMLSpanElement>(null)
+  const markRef = useRef<HTMLSpanElement>(null)
   const timelineRef = useRef<gsap.core.Timeline | null>(null)
   const pendingDestination = useRef<string | null>(null)
   const scrollRef = useRef(scroll)
@@ -77,7 +63,7 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
       if (traveling) return
       if (to === location.pathname + location.search) return
 
-      if (reducedMotion) {
+      if (reducedMotion || ['/cart','/checkout','/order-confirmation'].some(path => to.startsWith(path) || location.pathname.startsWith(path))) {
         navigate(to)
         return
       }
@@ -103,7 +89,7 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
         .set(veil, { pointerEvents: 'auto', transformOrigin: 'bottom center', scaleY: 0 })
         .to(veil, { scaleY: 1, duration: COVER, ease: EASE.inOutQuart })
         .fromTo(
-          sealRef.current,
+          markRef.current,
           { scale: 1.35, opacity: 0 },
           { scale: 1, opacity: 1, duration: 0.4, ease: EASE.outExpo },
           COVER - 0.18,
@@ -112,7 +98,7 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
           pendingDestination.current = null
           navigate(to)
         })
-        .to(sealRef.current, { opacity: 0, duration: 0.24, ease: 'power2.out' }, `+=${HOLD}`)
+        .to(markRef.current, { opacity: 0, duration: 0.24, ease: 'power2.out' }, `+=${HOLD}`)
         .set(veil, { transformOrigin: 'top center' })
         .to(veil, { scaleY: 0, duration: CLEAR, ease: EASE.inOutQuart })
         .set(veil, { pointerEvents: 'none' })
@@ -132,7 +118,6 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
     pendingDestination.current = null
   }, [reducedMotion, location.key, navigationType, navigate])
 
-  /* --- Scroll position on route change ----------------------------------- */
   useEffect(() => {
     if (navigationType === 'POP') {
       const remembered = scrollMemory.get(location.key)
@@ -154,7 +139,6 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
     }
   }, [location.key, navigationType])
 
-  /* --- Focus and announcement on route change ---------------------------- */
   const firstRender = useRef(true)
   useEffect(() => {
     if (traveling) return
@@ -174,14 +158,12 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
     return () => cancelAnimationFrame(frame)
   }, [location.pathname, traveling, requestRefresh])
 
-  /* --- Kill an in-flight veil if unmounted mid-transition ---------------- */
   useEffect(() => {
     return () => {
       timelineRef.current?.kill()
     }
   }, [])
 
-  /* The browser's own scroll restoration fights Lenis, so we take it over. */
   useEffect(() => {
     if ('scrollRestoration' in window.history) {
       const previous = window.history.scrollRestoration
@@ -197,8 +179,8 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
       <div inert={traveling}>{children}</div>
 
       <div className="veil" ref={veilRef} aria-hidden="true">
-        <span className="veil__seal" ref={sealRef}>
-          <Seal />
+        <span className="veil__mark" ref={markRef}>
+          {brand.name}
         </span>
       </div>
 
@@ -209,14 +191,9 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
   )
 }
 
-/* --- Router-aware link ----------------------------------------------------
-   A real anchor with a real href, so middle-click, command-click, and
-   right-click all behave like the browser says they should. Only a plain
-   left-click is intercepted to play the veil. */
+type SiteLinkProps = ComponentProps<typeof Link>
 
-type SumiLinkProps = ComponentProps<typeof Link>
-
-export function SumiLink({ onClick, ...rest }: SumiLinkProps) {
+export function SiteLink({ onClick, ...rest }: SiteLinkProps) {
   const travel = useTravel()
   const destination = useResolvedPath(rest.to)
 
@@ -235,7 +212,6 @@ export function SumiLink({ onClick, ...rest }: SumiLinkProps) {
   return <Link {...rest} onClick={handleClick} />
 }
 
-/** Sets document title from a route. Kept here so every route agrees. */
 export function useDocumentTitle(title: string): void {
   useEffect(() => {
     const previous = document.title
