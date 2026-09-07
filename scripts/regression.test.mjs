@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import {after,test} from 'node:test'
+import {existsSync} from 'node:fs'
 import {build,createServer} from 'vite'
 import {createElement as h} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
@@ -12,14 +13,16 @@ const {CapabilitiesProvider,motionBudgetFor}=await server.ssrLoadModule('/src/li
 const {CartProvider,normalizeCart,readCart,toOrderLines,consumeCart}=await server.ssrLoadModule('/src/state/cart.tsx')
 const {StoreProvider}=await server.ssrLoadModule('/src/state/store.tsx')
 const {TransitionProvider}=await server.ssrLoadModule('/src/components/Transition.tsx')
+const {InteractionProvider}=await server.ssrLoadModule('/src/components/Interactions.tsx')
+const {visualPolicyFor}=await server.ssrLoadModule('/src/lib/visual-policy.ts')
 const {PhotoPlate}=await server.ssrLoadModule('/src/components/PhotoPlate.tsx')
-const {garments,filterGarments}=await server.ssrLoadModule('/src/data/collection.ts')
+const {garments,filterGarments,sortGarments}=await server.ssrLoadModule('/src/data/collection.ts')
 const {entries}=await server.ssrLoadModule('/src/data/journal.ts')
 const {detectWebGL}=await server.ssrLoadModule('/src/lib/motion.ts')
 const {api,ApiError}=await server.ssrLoadModule('/src/lib/api.ts')
 const {readPending}=await server.ssrLoadModule('/src/routes/Checkout.tsx')
 function renderRoute(path) {
- return renderToStaticMarkup(h(MemoryRouter,{initialEntries:[path]},h(CapabilitiesProvider,null,h(CartProvider,null,h(StoreProvider,null,h(TransitionProvider,null,h(App)))))))
+ return renderToStaticMarkup(h(MemoryRouter,{initialEntries:[path]},h(CapabilitiesProvider,null,h(CartProvider,null,h(StoreProvider,null,h(InteractionProvider,null,h(TransitionProvider,null,h(App))))))))
 }
 for(const [path,title] of [
 ['/','Nie ma'],['/shop','Wybierz swój ślad.'],['/collection','Wybierz swój ślad.'],['/process','Od kawałka płótna.'],['/atelier','Od kawałka płótna.'],['/journal','Pomiędzy szwami.'],
@@ -68,7 +71,9 @@ test('Checkout recovery ignores malformed session data',()=>{
 })
 test('Checkout document with a saved cart has address, delivery and acknowledgement',()=>{
  const prior=globalThis.window
- try {globalThis.window={localStorage:{getItem:()=>JSON.stringify([line])}};const html=renderRoute('/checkout');assert.match(html,/name="street"/);assert.match(html,/name="postalCode"/);assert.match(html,/name="shipping"/);assert.match(html,/Zapisz zamówienie bez płatności/)}
+ // Motion subscribes to resize when a window exists; this storage-only fixture
+ // provides that event interface. It does not assert browser layout or gestures.
+ try {globalThis.window=Object.assign(new EventTarget(),{innerWidth:1280,localStorage:{getItem:()=>JSON.stringify([line])}});const html=renderRoute('/checkout');assert.match(html,/name="street"/);assert.match(html,/name="postalCode"/);assert.match(html,/name="shipping"/);assert.match(html,/Zapisz zamówienie bez płatności/)}
  finally{if(prior===undefined)delete globalThis.window;else globalThis.window=prior}
 })
 test('Photograph probes a real URL and keeps a descriptive fallback',()=>{
@@ -77,10 +82,46 @@ test('Photograph probes a real URL and keeps a descriptive fallback',()=>{
  const hero=renderToStaticMarkup(h(PhotoPlate,{slot:'botanika',alt:'Bawełniane spodnie.',eager:true}))
  assert.match(hero,/srcSet=/);assert.match(hero,/loading="eager"/);assert.match(hero,/width="1086" height="1448"/)
 })
-test('High device tier never bypasses unavailable WebGL or reduced motion',()=>{
- for(const tier of ['low','high']) {assert.equal(motionBudgetFor({tier,webgl:false,reducedMotion:false}).enabled,false);assert.equal(motionBudgetFor({tier,webgl:true,reducedMotion:true}).enabled,false)}
- assert.equal(motionBudgetFor({tier:'low',webgl:true,reducedMotion:false}).clothSegments,64)
- assert.equal(motionBudgetFor({tier:'high',webgl:true,reducedMotion:false}).clothSegments,128)
+test('Rich opt-in never bypasses hardware, data or accessibility vetoes',()=>{
+ for(const tier of ['low','high']) for(const webgl of [false,true]) for(const reducedMotion of [false,true]) for(const richEffects of [false,true]) for(const saveData of [false,true]) {
+  const capabilities={tier,webgl,reducedMotion,richEffects,saveData,reducedTransparency:false}
+  const budget=motionBudgetFor(capabilities),policy=visualPolicyFor(capabilities)
+  const enabled=tier==='high'&&webgl&&!reducedMotion&&richEffects&&!saveData
+  assert.equal(budget.enabled,enabled);assert.equal(policy.depth,enabled)
+  if(!enabled)assert.equal(budget.clothSegments,0)
+  if(reducedMotion||tier==='low'||saveData) for(const effect of ['depth','pin','parallax','glass','magnetic'])assert.equal(policy[effect],false,effect)
+ }
+ const high={tier:'high',webgl:true,reducedMotion:false}
+ assert.equal(motionBudgetFor(high).enabled,false)
+ assert.equal(motionBudgetFor({...high,richEffects:true}).clothSegments,96)
+ assert.deepEqual(motionBudgetFor({...high,richEffects:true}).dpr,[1,1.5])
+})
+test('Reduced transparency and reduced motion independently control glass and interactions',()=>{
+ const high={tier:'high',webgl:true,reducedMotion:false,richEffects:false,saveData:false,reducedTransparency:false}
+ assert.equal(visualPolicyFor(high).glass,true);assert.equal(visualPolicyFor(high).pin,false)
+ const transparent=visualPolicyFor({...high,reducedTransparency:true,richEffects:true})
+ assert.equal(transparent.glass,false);assert.equal(transparent.depth,true)
+ assert.equal(visualPolicyFor({...high,reducedMotion:true}).componentMotion,false)
+ assert.equal(visualPolicyFor({...high,reducedMotion:true}).richAvailable,false)
+})
+test('Sorting filtered products preserves catalog order and is reflected in the URL document',()=>{
+ const before=garments.map(p=>p.slug)
+ assert.deepEqual(sortGarments(garments,'price-asc').map(p=>p.price),garments.map(p=>p.price).sort((a,b)=>a-b))
+ assert.deepEqual(sortGarments(garments,'price-desc').map(p=>p.price),garments.map(p=>p.price).sort((a,b)=>b-a))
+ assert.deepEqual(sortGarments(garments,'unknown').map(p=>p.slug),before)
+ assert.deepEqual(garments.map(p=>p.slug),before)
+ const filtered=filterGarments(new URLSearchParams('material=Len'))
+ assert.equal(sortGarments(filtered,'price-asc').length,filtered.length)
+ assert.match(renderRoute('/shop?sort=price-desc'),/<option value="price-desc" selected="">/)
+})
+test('White studio photography ships all responsive sizes and remains visible in the static gallery',()=>{
+ for(const product of garments) {
+  const slot=product.slot+'-studio'
+  for(const suffix of ['','-480','-960'])assert.ok(existsSync(new URL('../public/media/'+slot+suffix+'.webp',import.meta.url)))
+  const html=renderRoute('/shop/'+product.slug)
+  assert.ok(html.includes('/media/'+slot+'.webp'))
+  assert.doesNotMatch(html,/<figure[^>]*style="opacity:0/)
+ }
 })
 test('WebGL 1-only devices do not mount a WebGL 2 renderer',()=>{
  const previousWindow=globalThis.window,previousDocument=globalThis.document,requests=[]

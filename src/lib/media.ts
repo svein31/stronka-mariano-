@@ -1,5 +1,5 @@
 // Generated development imagery. Replace with approved real garment/process photos.
-export const mediaSlots = ['botanika','gest','forma','process']
+export const mediaSlots = ['botanika','gest','forma','process','botanika-studio','gest-studio','forma-studio']
 const resolved = new Map<string,string|null>()
 export const candidatesFor = (slot:string) => ['/media/'+slot+'.webp','/media/'+slot+'.jpg']
 export const knownPath = (slot:string) => resolved.get(slot) ?? null

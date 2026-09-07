@@ -55,7 +55,7 @@ export function Checkout() {
   return <label className="field" key={key}>{label}<input name={key} type={type} value={customer[key]} required={required} maxLength={key==='email'?254:180} autoComplete={autoComplete} aria-invalid={!!fields[key]} aria-describedby={fields[key]?key+'-error':undefined} pattern={key==='postalCode'?'[0-9]{2}-[0-9]{3}':undefined} onChange={e=>setCustomer(c=>({...c,[key]:e.target.value}))}/>{fields[key]&&<span className="field-error" id={key+'-error'}>{fields[key]}</span>}</label>
  }
  return <><PageHeading eyebrow="Jeszcze jeden krok" title="Twoja para. Twoje dane." text="Zapisz zamówienie do uzgodnienia z pracownią. Na tym etapie niczego nie płacisz."/>
- <section className="shell section checkout-grid">
+ <section className="shell section checkout-grid solid-stage">
  {!cart.lines.length&&!pending?<p className="empty">Koszyk jest pusty. <Link to="/shop">Wybierz spodnie →</Link></p>:<>
  <form onSubmit={submit} className="checkout-form">
  {config?.demo&&<p className="notice">Tryb demonstracyjny. Użyj danych testowych — to nie jest działający sklep.</p>}
@@ -79,7 +79,7 @@ export function OrderConfirmation() {
  const [receipt,setReceipt]=useState<Receipt|null>(null),[error,setError]=useState(''),[attempt,setAttempt]=useState(0)
  useEffect(()=>{if(!key?.id||!key?.token)return;let active=true;setError('');api<Receipt>('/api/orders/'+encodeURIComponent(key.id),{headers:{Authorization:'Bearer '+key.token}}).then(r=>{if(active)setReceipt(r)}).catch(e=>{if(active)setError(e.message)});return()=>{active=false}},[key,attempt])
  return <><PageHeading eyebrow="Potwierdzenie zapisu" title={receipt?'Mamy Twój wybór.':'Twoje potwierdzenie.'} text={receipt?'Zamówienie oczekuje na uzgodnienie. Płatność nie została pobrana.':'Potwierdzenie jest dostępne tylko z prywatnym kluczem zapisanym w tej karcie.'}/>
- <section className="shell section receipt">{!key?<p>Nie ma zapisanego potwierdzenia. <Link to="/shop">Wróć do kolekcji</Link>.</p>:error?<p role="alert">{error} <button onClick={()=>setAttempt(n=>n+1)}>Ponów</button></p>:!receipt?<p role="status">Pobieramy zapis…</p>:<>
+ <section className="shell section receipt solid-stage">{!key?<p>Nie ma zapisanego potwierdzenia. <Link to="/shop">Wróć do kolekcji</Link>.</p>:error?<p role="alert">{error} <button onClick={()=>setAttempt(n=>n+1)}>Ponów</button></p>:!receipt?<p role="status">Pobieramy zapis…</p>:<>
  {receipt.demo&&<p className="notice">Zamówienie demonstracyjne — nie trafi do realizacji.</p>}<p className="small">Numer: {receipt.id}</p><p>Kontakt: {receipt.customer.name} · {receipt.customer.email}</p>
  {receipt.customer.street&&<p>Dostawa: {receipt.customer.street}, {receipt.customer.postalCode} {receipt.customer.city}</p>}
  <OrderSummary quote={receipt.quote}/><p>Status: oczekuje na uzgodnienie. To potwierdzenie zapisu, nie potwierdzenie zawarcia umowy.</p><button className="btn btn--outline" onClick={()=>window.print()}>Drukuj / zapisz jako PDF</button><p><Link to="/shop">Wróć do spodni →</Link></p></>}</section></>

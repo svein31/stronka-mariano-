@@ -3,9 +3,9 @@
   justify-content: space-between;
   align-items: center;
   gap: 2rem;
-  background: var(--indigo);
+  background: var(--accent);
   color: var(--canvas);
-  border: 1px solid var(--indigo);
+  border: 1px solid var(--accent);
   padding: 1rem 1.5rem;
   min-height: 56px;
   text-decoration: none;
@@ -21,7 +21,7 @@
 
 .btn--outline {
   background: transparent;
-  color: var(--indigo);
+  color: var(--accent);
 }
 
 .btn--light {
@@ -39,7 +39,7 @@
 }
 
 .field-error {
-  color: var(--clay);
+  color: var(--charcoal);
 }
 
 .field-row {
@@ -125,7 +125,7 @@
   left: 0;
   height: 2px;
   width: 100%;
-  background: var(--indigo);
+  background: var(--accent);
   transform: scaleX(0);
   transform-origin: left;
 }
@@ -190,7 +190,7 @@
 
 .veil__mark {
   font: italic 4rem var(--font-display);
-  color: var(--indigo);
+  color: var(--accent);
 }
 
 .plate {
@@ -619,5 +619,5 @@
   min-height: 32px!important;
   padding: 0!important;
   border: 0!important;
-  accent-color: var(--indigo);
+  accent-color: var(--accent);
 }

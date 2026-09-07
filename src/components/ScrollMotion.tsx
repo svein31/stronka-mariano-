@@ -13,7 +13,7 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SplitText } from 'gsap/SplitText'
 import { useGSAP } from '@gsap/react'
-import { useMotionAllowed } from '../lib/capabilities'
+import { useMotionAllowed, useVisualPolicy } from '../lib/capabilities'
 import { DUR, EASE, revealPlate } from '../lib/motion'
 
 export interface RiseProps {
@@ -202,12 +202,13 @@ export function Parallax({
   id,
 }: ParallaxProps) {
   const allowed = useMotionAllowed()
+  const policy=useVisualPolicy()
   const ref = useRef<HTMLDivElement>(null)
 
   useGSAP(
     () => {
       const target = ref.current
-      if (!allowed || !target) return
+      if (!allowed || !policy.parallax || !target) return
       const source = trigger?.current ?? target
 
       gsap.fromTo(
@@ -229,7 +230,7 @@ export function Parallax({
     {
       scope: ref,
       revertOnUpdate: true,
-      dependencies: [allowed, from, to, start, end, trigger],
+      dependencies: [allowed, policy.parallax, from, to, start, end, trigger],
     },
   )
 

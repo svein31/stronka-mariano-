@@ -3,11 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import gsap from 'gsap'
-import { useGSAP } from '@gsap/react'
-import { useCapabilities } from '../lib/capabilities'
+import {motion} from 'motion/react'
+import {GlassGlint} from './Interactions'
+import { useCapabilities, useVisualPolicy } from '../lib/capabilities'
 import { useFocusTrap } from '../lib/focus'
-import { EASE } from '../lib/motion'
 import { useCart } from '../state/cart'
 import { SiteLink, useTransitioning } from './Transition'
 import brand from '../../shared/brand.json'
@@ -18,7 +17,8 @@ const SCRIM_AT = 64
 export function Nav() {
   const location = useLocation()
   const traveling = useTransitioning()
-  const { scroll, reducedMotion, systemReducedMotion, motionPaused, setMotionPaused } = useCapabilities()
+  const { scroll, reducedMotion, systemReducedMotion, motionPaused, setMotionPaused, richEffects, setRichEffects } = useCapabilities()
+  const policy=useVisualPolicy()
   const { count, setOpen } = useCart()
 
   const shell = useRef<HTMLElement>(null)
@@ -71,26 +71,6 @@ export function Nav() {
     setOpenPanel(false)
   }, [location.pathname, location.search])
 
-  useGSAP(
-    () => {
-      if (!open || reducedMotion || !panel.current) return
-
-      gsap.fromTo(
-        panel.current.querySelectorAll('.nav-panel__item'),
-        { y: 56, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.85,
-          ease: EASE.outExpo,
-          stagger: 0.07,
-          delay: 0.08,
-        },
-      )
-    },
-    { scope: panel, revertOnUpdate: true, dependencies: [open, reducedMotion] },
-  )
-
   const isActive = (match: string): boolean => location.pathname.startsWith(match)
 
   return (
@@ -99,7 +79,8 @@ export function Nav() {
         Przejdź do treści
       </a>
 
-      <header className="nav" ref={shell} data-scrolled={scrolled} data-traveling={traveling}>
+      <header className="nav glass" ref={shell} data-scrolled={scrolled} data-traveling={traveling}>
+        <GlassGlint/>
         <SiteLink to="/" className="nav__wordmark" aria-label={brand.name + ', strona główna'}>
 
           <span aria-hidden="true">{brand.name.toLowerCase()}</span>
@@ -118,7 +99,7 @@ export function Nav() {
           ))}
         </nav>
 
-        <div className="nav__actions">
+        <div className="nav__actions"><button className="nav__effects" type="button" aria-pressed={richEffects} disabled={!policy.richAvailable} onClick={()=>setRichEffects(!richEffects)} aria-label="Włącz efekty przestrzenne" title="Opcjonalne efekty przestrzenne na mocniejszych komputerach">3D</button>
           <button
             className="nav__motion"
             type="button"
@@ -160,8 +141,12 @@ export function Nav() {
         <div className="nav__progress" ref={progress} aria-hidden="true" />
       </header>
 
-      <div
-        className="nav-panel"
+      <motion.div
+        initial={false}
+        animate={{opacity:open?1:0,y:open?0:16}}
+        transition={{duration:reducedMotion?0:.24}}
+        aria-hidden={!open}
+        className="nav-panel glass"
         id="nav-panel"
         ref={panel}
         data-open={open}
@@ -191,7 +176,7 @@ export function Nav() {
             ))}
           </ul>
         </nav>
-      </div>
+      </motion.div>
     </>
   )
 }

@@ -16,12 +16,17 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import {visualPolicyFor} from './visual-policy'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { createScrollLayer, destroyScrollLayer, type ScrollApi } from './scroll'
 import { detectWebGL, perfTier, useReducedMotion, type PerfTier } from './motion'
 
 interface CapabilitiesValue {
   reducedMotion: boolean
+  richEffects: boolean
+  setRichEffects: (enabled:boolean)=>void
+  saveData: boolean
+  reducedTransparency: boolean
   systemReducedMotion: boolean
   motionPaused: boolean
   setMotionPaused: (paused: boolean) => void
@@ -44,6 +49,10 @@ const NOOP_SCROLL: ScrollApi = {
 
 const CapabilitiesContext = createContext<CapabilitiesValue>({
   reducedMotion: false,
+  richEffects: false,
+  setRichEffects: ()=>undefined,
+  saveData: true,
+  reducedTransparency: true,
   systemReducedMotion: false,
   motionPaused: false,
   setMotionPaused: () => undefined,
@@ -56,15 +65,14 @@ const CapabilitiesContext = createContext<CapabilitiesValue>({
 
 /**
  * Geometry budget handed to every WebGL scene. Scenes derive their vertex and
- * instance counts from this so a weak device receives a lighter composition
- * rather than a broken or absent one.
+ * instance counts from this. Weak devices keep the complete static composition.
  */
 export interface MotionBudget {
   /** Subdivisions per axis on the cloth plane. */
   clothSegments: number
   /** Warp threads in the loom field. */
   threads: number
-  /** Ambient ink motes. */
+  /** Ambient pigment motes. */
   motes: number
   /** Renderer pixel ratio ceiling. Capping this is the largest GPU saving. */
   dpr: readonly [number, number]
@@ -72,17 +80,9 @@ export interface MotionBudget {
 }
 
 export const BUDGET_HIGH: MotionBudget = {
-  clothSegments: 128,
-  threads: 140,
-  motes: 900,
-  dpr: [1, 2],
-  enabled: true,
-}
-
-export const BUDGET_LOW: MotionBudget = {
-  clothSegments: 64,
-  threads: 60,
-  motes: 260,
+  clothSegments: 96,
+  threads: 90,
+  motes: 200,
   dpr: [1, 1.5],
   enabled: true,
 }
@@ -97,6 +97,18 @@ export const BUDGET_NONE: MotionBudget = {
 
 export function CapabilitiesProvider({ children }: { children: ReactNode }) {
   const systemReducedMotion = useReducedMotion()
+  const [richEffects,setRichEffects]=useState(false)
+  const [saveData,setSaveData]=useState(true)
+  const [reducedTransparency,setReducedTransparency]=useState(true)
+  useEffect(()=>{
+    const connection=(navigator as Navigator & {connection?:EventTarget & {saveData?:boolean}}).connection
+    const updateConnection=()=>setSaveData(Boolean(connection?.saveData))
+    updateConnection();connection?.addEventListener('change',updateConnection)
+    const query=window.matchMedia('(prefers-reduced-transparency: reduce)')
+    const updateTransparency=()=>setReducedTransparency(query.matches)
+    updateTransparency();query.addEventListener('change',updateTransparency)
+    return()=>{connection?.removeEventListener('change',updateConnection);query.removeEventListener('change',updateTransparency)}
+  },[])
   const [motionPaused, setMotionPaused] = useState(false)
   const reducedMotion = systemReducedMotion || motionPaused
   const [webgl, setWebgl] = useState(false)
@@ -138,9 +150,13 @@ export function CapabilitiesProvider({ children }: { children: ReactNode }) {
     ScrollTrigger.refresh()
   }, [refreshKey, reducedMotion])
 
+  const policy=visualPolicyFor({tier,webgl,reducedMotion,richEffects,saveData,reducedTransparency})
+  useEffect(()=>{document.documentElement.dataset.glass=policy.glass?'rich':'solid';return()=>{delete document.documentElement.dataset.glass}},[policy.glass])
+
   const value = useMemo<CapabilitiesValue>(
     () => ({
       reducedMotion,
+      richEffects,setRichEffects,saveData,reducedTransparency,
       systemReducedMotion,
       motionPaused,
       setMotionPaused,
@@ -150,7 +166,7 @@ export function CapabilitiesProvider({ children }: { children: ReactNode }) {
       refreshKey,
       requestRefresh,
     }),
-    [reducedMotion, systemReducedMotion, motionPaused, webgl, tier, scroll, refreshKey, requestRefresh],
+    [richEffects,saveData,reducedTransparency,reducedMotion, systemReducedMotion, motionPaused, webgl, tier, scroll, refreshKey, requestRefresh],
   )
 
   return <CapabilitiesContext.Provider value={value}>{children}</CapabilitiesContext.Provider>
@@ -169,14 +185,14 @@ export function useMotionAllowed(): boolean {
 }
 
 /**
- * How much geometry a scene may build. This is a budget, not a permission.
- * A low tier gets a lighter composed scene, never a broken or absent one.
+ * Geometry and permission for a scene. Low tier uses the static composition.
  */
 export function useMotionBudget(): MotionBudget {
   return motionBudgetFor(useCapabilities())
 }
 
-export function motionBudgetFor({ tier, webgl, reducedMotion }: Pick<CapabilitiesValue, 'tier' | 'webgl' | 'reducedMotion'>): MotionBudget {
-  if (!webgl || reducedMotion) return BUDGET_NONE
-  return tier === 'high' ? BUDGET_HIGH : BUDGET_LOW
+export function motionBudgetFor({tier,webgl,reducedMotion,richEffects=false,saveData=false}: Pick<CapabilitiesValue,'tier'|'webgl'|'reducedMotion'> & Partial<Pick<CapabilitiesValue,'richEffects'|'saveData'>>):MotionBudget {
+  if(!webgl || reducedMotion || tier==='low' || !richEffects || saveData)return BUDGET_NONE
+  return BUDGET_HIGH
 }
+export function useVisualPolicy(){return visualPolicyFor(useCapabilities())}

@@ -1,15 +1,19 @@
 :root {
-  --canvas: #f5f1e8;
-  --ecru: #e8e0d2;
-  --charcoal: #292b27;
-  --muted: #606157;
-  --indigo: #344b64;
-  --clay: #914f38;
-  --line: #77766b;
-  --font-display: Georgia,'Times New Roman',serif;
-  --font-body: 'Trebuchet MS',Arial,sans-serif;
-  --space-page: clamp(1.25rem,4.5vw,5rem);
-  --section-space: clamp(4rem,8vw,8rem);
-  --display: clamp(3rem,7.7vw,7.5rem);
-  --headline: clamp(2rem,4.5vw,4.5rem);
+  --night: #0c0d10;
+  --panel: #1a1c22;
+  --canvas: #ffffff;
+  --ecru: #f0f1f2;
+  --charcoal: #101114;
+  --muted: #555b65;
+  --muted-inverse: #b8bcc4;
+  --accent: #d6ff3f;
+  --line: #707780;
+  --glass-worst: #1c1d20;
+  --story-worst: #2f3032;
+  --font-display: Impact, Haettenschweiler, 'Arial Narrow', 'Arial Black', Arial, sans-serif;
+  --font-body: Arial, Helvetica, sans-serif;
+  --space-page: clamp(1.25rem, 4vw, 4rem);
+  --section-space: clamp(4rem, 8vw, 8rem);
+  --display: clamp(3.5rem, 10.5vw, 10rem);
+  --headline: clamp(2.5rem, 5vw, 5rem);
 }

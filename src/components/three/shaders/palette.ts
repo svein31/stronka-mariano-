@@ -1,3 +1,6 @@
-// Keep in sync with CSS tokens; verified by audit:palette.
-export const SHADER_PALETTE = {canvas:'#f5f1e8',ecru:'#e8e0d2',charcoal:'#292b27',muted:'#606157',indigo:'#344b64',clay:'#914f38',line:'#77766b'} as const
+// Interface values match audited CSS; fabric colors are illustrative product pigments.
+export const SHADER_PALETTE = {
+ canvas:'#ffffff',ecru:'#f0f1f2',charcoal:'#101114',muted:'#555b65',line:'#707780',
+ indigo:'#344b64',clay:'#914f38'
+} as const
 export type ShaderPaletteKey=keyof typeof SHADER_PALETTE
