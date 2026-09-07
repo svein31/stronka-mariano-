@@ -8,3 +8,10 @@ export const formatPrice = (amount: number) => new Intl.NumberFormat(brand.local
 export function filterGarments(params: URLSearchParams) {
   return garments.filter(p => (!params.get('material') || p.material === params.get('material')) && (!params.get('print') || p.printStyle === params.get('print')) && (!params.get('size') || p.sizes.includes(params.get('size')!)))
 }
+
+export function sortGarments(products:Garment[],order:string|null) {
+ const sorted=[...products]
+ if(order==='price-asc')sorted.sort((a,b)=>a.price-b.price)
+ if(order==='price-desc')sorted.sort((a,b)=>b.price-a.price)
+ return sorted
+}

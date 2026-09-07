@@ -103,6 +103,9 @@ function Drape({ cloth, cover, progress, bounds }: DrapeProps) {
     if (group.current) {
       group.current.position.x = drift.current.x
       group.current.position.y = drift.current.y
+      group.current.rotation.y = (progress.current-.5)*.32
+      group.current.rotation.x = (progress.current-.5)*-.12
+      state.camera.position.z = THREE.MathUtils.lerp(state.camera.position.z, HERO_CAMERA.position[2] - progress.current*.9, lag(delta,.4))
     }
   })
 

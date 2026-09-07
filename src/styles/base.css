@@ -79,7 +79,7 @@ h3 {
 
 em {
   font-weight: 400;
-  color: var(--indigo);
+  color: var(--accent);
 }
 
 img {
@@ -112,7 +112,7 @@ textarea {
 }
 
 input[type=radio],input[type=checkbox] {
-  accent-color: var(--indigo);
+  accent-color: var(--accent);
   width: 20px;
   height: 20px;
   flex: none;
@@ -136,7 +136,7 @@ fieldset+fieldset {
 }
 
 :focus-visible {
-  outline: 2px solid var(--indigo);
+  outline: 2px solid var(--accent);
   outline-offset: 5px;
 }
 
@@ -145,7 +145,7 @@ fieldset+fieldset {
 }
 
 ::selection {
-  background: var(--indigo);
+  background: var(--accent);
   color: var(--canvas);
 }
 
@@ -240,14 +240,14 @@ fieldset+fieldset {
 
 .notice,.error {
   padding: 1.2rem;
-  border-left: 3px solid var(--indigo);
+  border-left: 3px solid var(--accent);
   background: var(--ecru);
   margin-block: 1rem;
 }
 
 .error {
-  border-color: var(--clay);
-  color: var(--clay);
+  border-color: var(--charcoal);
+  color: var(--charcoal);
 }
 
 .demo-copy {

@@ -11,7 +11,7 @@ Install Node.js 24 or later and Git. Open Terminal / PowerShell, then:
 ```sh
 git clone https://github.com/svein31/stronka-mariano-.git
 cd stronka-mariano-
-git switch codex/handmade-store
+git switch codex/cinematic-glass
 npm ci
 npm run dev
 ```
@@ -81,7 +81,7 @@ No provider keys, SDK, live payment endpoint or pretend successful payment are p
 
 ## Motion, images and access
 
-The original route focus restoration, focus traps, geometry budgets, reduced-motion gate, Lenis and GSAP are retained. Transitions bypass cart/checkout/receipt. The fabric material now uses cotton/linen parameters, warm neutrals and a procedural printed pattern. Photography and readable text remain independent of WebGL. Optional modules load near the viewport; canvases stop offscreen or in hidden tabs. Swatches retain keyboard range controls. Reveals animate transform and opacity.
+The original route focus restoration, focus traps, geometry budgets, reduced-motion gate, Lenis and GSAP are retained. Transitions bypass cart/checkout/receipt. The fabric material now uses cotton/linen parameters, neutral light and dark tones and a procedural printed pattern. Photography and readable text remain independent of WebGL. Optional modules load near the viewport; canvases stop offscreen or in hidden tabs. Swatches retain keyboard range controls. Reveals animate transform and opacity.
 
 `PhotoPlate` loads responsive local WebP images, tries JPG on failure, reserves space and retains a descriptive fallback. See `public/media/README.md` for replacement instructions. Generated imagery is explicitly labelled: it is not evidence of actual products or workshop processes.
 
@@ -102,3 +102,17 @@ Browser-based visual/keyboard/screen-reader QA, actual WebGL behavior on devices
 Review DESIGN.md and PRODUCT.md. Replace generated media, demo prices, specifications and measurements with real approved data. Confirm taxes, shipping, lead times, seller identity, policies and privacy/retention details with the owner and legal reviewer. The legal draft does not assume every made-to-order item is exempt from withdrawal.
 
 The default STORE_MODE is demo. Setting live requires complete seller fields, an HTTPS PUBLIC_ORIGIN, POLICIES_APPROVED=true and a non-draft POLICY_VERSION. This configuration gate does not substitute for reviewing actual legal copy or replacing demo assets. Configure email and an owner workflow before accepting real enquiries. Payments remain disabled even in live mode.
+
+## Cinematic redesign / motion responsibilities
+
+The latest brief replaces the warm serif presentation with condensed athletic type, full-bleed dark process stories, white product stages and a single lime accent. White studio product images are generated edits of the original concept assets. No Nike logo, copy or media is used.
+
+GSAP/ScrollTrigger owns the desktop pinned hero and craft chapter, scrubbed CSS perspective layers, and the existing fabric scene's camera/mesh travel. Motion for React (Framer Motion) owns drawer/menu transitions, product layout changes when filtering/sorting, and bounded magnetic CTA gestures. Checkout remains opaque and does not use those decorative interactions.
+
+Navigation, filters and the drawer have a solid default. Capable devices can apply a fixed 8px backdrop blur; rgba(12,13,16,.94) protects text contrast over any photo. A 2px moving edge highlight stays outside the text surface. Blur itself is never interpolated. Unsupported backdrop-filter, reduced transparency, reduced motion, low tier and save-data retain solid panels.
+
+The 3D button explicitly enables rich desktop effects for the current session. It cannot override reduced motion, low/coarse-pointer hardware or save-data. Before opt-in, the full static narrative and products are visible. Canvas chunks stay lazy; no scene on low tier. Motion pause restores the unpinned composition.
+
+Physical mid-range-phone profiling and browser QA are still unperformed: this environment exposes neither a physical phone nor browser-control tools. Consequently full effects are opt-in and no mobile 3D path is enabled. Before removing this release gate, record frame time, responsiveness, LCP/CLS and memory on a real phone; exercise 320px/200% zoom, keyboard dialogs, reduced motion during a pinned chapter, WebGL context loss and blur-disabled rendering.
+
+Implementation references: [Motion installation](https://motion.dev/docs/react-installation), [Motion accessibility](https://motion.dev/docs/react-accessibility). The existing backend and disabled-payment contract are unchanged.

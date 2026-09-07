@@ -99,7 +99,7 @@
 }
 
 .process-story em {
-  color: var(--clay);
+  color: var(--charcoal);
 }
 
 .process-story p:not(.eyebrow) {
@@ -231,7 +231,7 @@
 
 .product-info .availability {
   font-size: .875rem;
-  color: var(--indigo);
+  color: var(--accent);
   border-top: 1px solid var(--line);
   padding-top: 1rem;
   margin-top: 1.5rem;
@@ -250,9 +250,9 @@
 }
 
 .gallery-controls [aria-pressed=true] {
-  background: var(--indigo);
+  background: var(--accent);
   color: var(--canvas);
-  border-color: var(--indigo);
+  border-color: var(--accent);
 }
 
 .size-options {
@@ -287,13 +287,13 @@
 }
 
 .size-options input:checked+span {
-  background: var(--indigo);
+  background: var(--accent);
   color: var(--canvas);
-  border-color: var(--indigo);
+  border-color: var(--accent);
 }
 
 .size-options input:focus-visible+span {
-  outline: 2px solid var(--indigo);
+  outline: 2px solid var(--accent);
   outline-offset: 4px;
 }
 
