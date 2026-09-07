@@ -1,16 +1,4 @@
-/* ==========================================================================
-   Navigation shell.
 
-   Fixed, transparent over the opening ink movement, and gaining a sumi-void
-   scrim once the visitor has left the top of the page. Every route opens on
-   ink, which is what makes the transparent state safe: washi type on a washi
-   movement would be invisible, and no amount of scrim timing rescues that.
-
-   The mobile panel is a real dialog surface: focus is trapped while it is
-   open, restored to the toggle on close, Escape closes it, and the route
-   changes underneath it close it too, because a panel left open over a new
-   page is a panel the visitor has to dismiss twice.
-   ========================================================================== */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
@@ -21,11 +9,10 @@ import { useCapabilities } from '../lib/capabilities'
 import { useFocusTrap } from '../lib/focus'
 import { EASE } from '../lib/motion'
 import { useCart } from '../state/cart'
-import { SumiLink, useTransitioning } from './Transition'
-import { Seal } from './Seal'
+import { SiteLink, useTransitioning } from './Transition'
+import brand from '../../shared/brand.json'
 import { ROUTES } from '../routes/manifest'
 
-/** Pixels of scroll before the shell takes its scrim. */
 const SCRIM_AT = 64
 
 export function Nav() {
@@ -41,10 +28,6 @@ export function Nav() {
   const [open, setOpenPanel] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
-  /* --- Scroll position and progress --------------------------------------
-     Written straight to the DOM from ScrollTrigger's own update rather than
-     through state, so the hairline tracks the scroll without re-rendering the
-     shell sixty times a second. */
   useEffect(() => {
     const trigger = ScrollTrigger.create({
       start: 0,
@@ -60,7 +43,6 @@ export function Nav() {
     return () => trigger.kill()
   }, [])
 
-  /* --- Mobile panel ------------------------------------------------------ */
   const close = useCallback(() => setOpenPanel(false), [])
 
   useFocusTrap(panel, open, { onEscape: close })
@@ -89,15 +71,10 @@ export function Nav() {
     setOpenPanel(false)
   }, [location.pathname, location.search])
 
-  /* Only the route items are animated here. The panel's own ink fade belongs
-     to CSS, so that it runs in both directions and collapses to nothing under
-     `prefers-reduced-motion` without a branch in this file. */
   useGSAP(
     () => {
       if (!open || reducedMotion || !panel.current) return
 
-      /* Seventy milliseconds between routes, per the system. Rebuilt on open
-         rather than left mid-flight, which is what `revertOnUpdate` buys. */
       gsap.fromTo(
         panel.current.querySelectorAll('.nav-panel__item'),
         { y: 56, opacity: 0 },
@@ -119,25 +96,25 @@ export function Nav() {
   return (
     <>
       <a className="skip-link" href="#route-title">
-        Skip to content
+        Przejdź do treści
       </a>
 
       <header className="nav" ref={shell} data-scrolled={scrolled} data-traveling={traveling}>
-        <SumiLink to="/" className="nav__wordmark" aria-label="SUMI, home">
-          <Seal inline />
-          <span aria-hidden="true">SUMI</span>
-        </SumiLink>
+        <SiteLink to="/" className="nav__wordmark" aria-label={brand.name + ', strona główna'}>
 
-        <nav className="nav__links" aria-label="Primary">
+          <span aria-hidden="true">{brand.name.toLowerCase()}</span>
+        </SiteLink>
+
+        <nav className="nav__links" aria-label="Główna">
           {ROUTES.map((route) => (
-            <SumiLink
+            <SiteLink
               key={route.to}
               to={route.to}
               className="nav__link"
               aria-current={isActive(route.match) ? 'page' : undefined}
             >
               {route.label}
-            </SumiLink>
+            </SiteLink>
           ))}
         </nav>
 
@@ -149,7 +126,7 @@ export function Nav() {
             disabled={systemReducedMotion}
             onClick={() => setMotionPaused(!motionPaused)}
           >
-            {systemReducedMotion ? 'Motion reduced' : 'Pause motion'}
+            {systemReducedMotion ? 'Bez animacji' : (motionPaused ? 'Wznów ruch' : 'Pauza ruchu')}
           </button>
           <button
             type="button"
@@ -157,12 +134,12 @@ export function Nav() {
             onClick={() => setOpen(true)}
             aria-haspopup="dialog"
           >
-            Bag
+            Koszyk
             <span className="nav__bag-count" aria-hidden="true">
               {String(count).padStart(2, '0')}
             </span>
             <span className="sr-only">
-              {count === 1 ? ', one item' : `, ${count} items`}
+              {', liczba sztuk: ' + count}
             </span>
           </button>
 
@@ -176,7 +153,7 @@ export function Nav() {
           >
             <span className="nav__bar nav__bar--top" aria-hidden="true" />
             <span className="nav__bar nav__bar--bottom" aria-hidden="true" />
-            <span className="sr-only">{open ? 'Close menu' : 'Open menu'}</span>
+            <span className="sr-only">{open ? 'Zamknij menu' : 'Otwórz menu'}</span>
           </button>
         </div>
 
@@ -195,12 +172,12 @@ export function Nav() {
         tabIndex={-1}
         data-lenis-prevent
       >
-        <button className="nav-panel__close link-rule" type="button" onClick={close}>Close menu</button>
-        <nav aria-label="Routes">
+        <button className="nav-panel__close link-rule" type="button" onClick={close}>Zamknij menu</button>
+        <nav aria-label="Strony">
           <ul className="nav-panel__list">
             {ROUTES.map((route) => (
               <li className="nav-panel__item" key={route.to}>
-                <SumiLink
+                <SiteLink
                   to={route.to}
                   className="nav-panel__link"
                   aria-current={isActive(route.match) ? 'page' : undefined}
@@ -208,10 +185,8 @@ export function Nav() {
                 >
                   <span className="nav-panel__index">{route.index}</span>
                   <span className="nav-panel__label">{route.label}</span>
-                  <span className="nav-panel__kanji u-vertical" lang="ja" aria-hidden="true">
-                    {route.kanji}
-                  </span>
-                </SumiLink>
+
+                </SiteLink>
               </li>
             ))}
           </ul>

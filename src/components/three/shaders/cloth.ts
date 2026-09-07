@@ -1,57 +1,44 @@
-/* ==========================================================================
-   Sumi cloth. The one material language every 3D surface in the site shares.
 
-   The cloth is a subdivided plane displaced by layered simplex noise, with
-   normals derived analytically from the displacement rather than from a
-   normal map, so the lighting is always correct for whatever the fabric is
-   doing. Drape, sheen, and thread visibility come from the garment's real
-   cloth parameters in data/collection.ts, which is why the Habotai Shirt
-   moves differently from the Sashiko Jacket without anyone tuning it.
-
-   Colours are resolved from the audited palette so the shader and the CSS
-   cannot drift apart.
-   ========================================================================== */
 
 import * as THREE from 'three'
 import { SHADER_PALETTE } from './palette'
 import { SIMPLEX_NOISE_GLSL } from './noise'
 
 export interface ClothParameters {
-  /** 0 is a board, 1 is water. From the garment's cloth data. */
+
   drape: number
-  /** 0 is matte cotton, 1 is habotai catching a window. */
+
   sheen: number
-  /** How visible individual thread is at the surface. */
+
   weave: number
-  /** Base tint of the cloth itself. Defaults to sumi ink. */
+
   tint?: string
-  /** Overall plane opacity, used to fade scenes in and out. */
+
   opacity?: number
 }
 
 export interface ClothUniforms {
-  /* ShaderMaterial asks for a string index signature on its uniform map. The
-     named properties below stay strongly typed so scenes cannot read a typo. */
+
   [uniform: string]: THREE.IUniform
   uTime: { value: number }
-  /** Pointer position in plane space, lagged toward the real cursor. */
+
   uPointer: { value: THREE.Vector2 }
-  /** 0 to 1. How hard the cursor is currently pushing the cloth. */
+
   uGust: { value: number }
   uDrape: { value: number }
   uSheen: { value: number }
   uWeave: { value: number }
   uSize: { value: THREE.Vector2 }
-  /** 0 to 1. Scroll progress through the owning movement. */
+
   uScroll: { value: number }
   uOpacity: { value: number }
-  uInk: { value: THREE.Color }
+  uBase: { value: THREE.Color }
   uDeep: { value: THREE.Color }
   uIndigo: { value: THREE.Color }
-  uPaper: { value: THREE.Color }
+  uCanvas: { value: THREE.Color }
 }
 
-export const CLOTH_VERTEX = /* glsl */ `
+export const CLOTH_VERTEX =  `
 ${SIMPLEX_NOISE_GLSL}
 
 uniform float uTime;
@@ -67,8 +54,6 @@ varying vec3  vView;
 varying float vElevation;
 varying float vHang;
 
-/* Displacement for a single point. Called three times per vertex so the
-   normal can be derived from the surface rather than guessed at. */
 float elevation(vec2 p, vec2 surfaceUv) {
   float t = uTime;
 
@@ -99,10 +84,6 @@ float elevation(vec2 p, vec2 surfaceUv) {
 void main() {
   vUv = uv;
 
-  /* The geometry is a unit plane and uSize scales it here rather than on the
-     mesh, so a resize changes the cloth's world extent without rebuilding a
-     128x128 buffer. Displacement, epsilon, and the pointer all live in this
-     same scaled space, which keeps the normal correct at any viewport. */
   vec2 base = position.xy * uSize;
 
   // Epsilon scaled to the plane so the derived normal holds at any size.
@@ -129,11 +110,11 @@ void main() {
 }
 `
 
-export const CLOTH_FRAGMENT = /* glsl */ `
-uniform vec3  uInk;
+export const CLOTH_FRAGMENT =  `
+uniform vec3  uBase;
 uniform vec3  uDeep;
 uniform vec3  uIndigo;
-uniform vec3  uPaper;
+uniform vec3  uCanvas;
 uniform float uSheen;
 uniform float uWeave;
 uniform float uOpacity;
@@ -156,12 +137,13 @@ void main() {
   float key  = max(dot(N, keyDir), 0.0);
   float fill = max(dot(N, fillDir), 0.0);
 
-  // Bokashi. Tone gradates with elevation: valleys inked dense, ridges thin.
+  // Fabric shading. Tone gradates with elevation: valleys inked dense, ridges thin.
   float depth = smoothstep(-0.95, 0.95, vElevation);
-  vec3 base = mix(uInk, uDeep, 1.0 - depth);
+  vec3 base = mix(uBase, uDeep, 1.0 - depth);
 
   // Indigo settles into the deepest part of the wash, where dye pools.
-  base = mix(base, uIndigo, pow(1.0 - depth, 1.6) * 0.44);
+  float printed = smoothstep(0.3, 0.5, sin(vUv.x * 19.0 + sin(vUv.y * 12.0)) * sin(vUv.y * 17.0));
+  base = mix(base, uIndigo, printed * 0.65);
 
   vec3 colour = base * (0.26 + key * 0.88 + fill * 0.17);
 
@@ -170,17 +152,12 @@ void main() {
   vec3 half_ = normalize(keyDir + V);
   float exponent = mix(10.0, 110.0, uSheen);
   float gloss = pow(max(dot(N, half_), 0.0), exponent);
-  colour += uPaper * gloss * (0.16 + uSheen * 0.66);
+  colour += uCanvas * gloss * (0.16 + uSheen * 0.66);
 
   // The rim where cloth turns away from the window and catches it edge on.
   float rim = pow(1.0 - max(dot(N, V), 0.0), 2.7);
-  colour += uPaper * rim * (0.10 + uSheen * 0.18);
+  colour += uCanvas * rim * (0.10 + uSheen * 0.18);
 
-  /* Weave. Warp and weft crossing at a physically motivated thread count.
-     A sine this dense aliases into shimmer at hero distance, so the screen
-     derivative of the phase decides how much of it survives: far away the
-     thread dissolves, close up it appears. That is what real cloth does, and
-     it means nobody has to author two versions of the same surface. */
   float threads = max(uSize.x, uSize.y) * 46.0;
   float warpPhase = vUv.x * threads;
   float weftPhase = vUv.y * threads * 0.86;
@@ -216,12 +193,9 @@ export function createClothUniforms(
   size: readonly [number, number],
   parameters: ClothParameters = { drape: 0.75, sheen: 0.25, weave: 0.4 },
 ): ClothUniforms {
-  const ink = new THREE.Color(parameters.tint ?? SHADER_PALETTE.sumiLift)
+  const ink = new THREE.Color(parameters.tint ?? SHADER_PALETTE.ecru)
 
-  /* Valleys keep the cloth's own hue and simply go denser with ink. Deriving
-     the deep end from the tint is what lets one material serve both an ink
-     black coat and an undyed silk without either turning to mud. */
-  const deep = ink.clone().lerp(new THREE.Color(SHADER_PALETTE.sumiVoid), 0.55)
+  const deep = ink.clone().lerp(new THREE.Color(SHADER_PALETTE.charcoal), 0.55)
 
   return {
     uTime: { value: 0 },
@@ -233,10 +207,10 @@ export function createClothUniforms(
     uSize: { value: new THREE.Vector2(size[0], size[1]) },
     uScroll: { value: 0 },
     uOpacity: { value: parameters.opacity ?? 1 },
-    uInk: { value: ink },
+    uBase: { value: ink },
     uDeep: { value: deep },
-    uIndigo: { value: new THREE.Color(SHADER_PALETTE.ai) },
-    uPaper: { value: new THREE.Color(SHADER_PALETTE.washi) },
+    uIndigo: { value: new THREE.Color(SHADER_PALETTE.indigo) },
+    uCanvas: { value: new THREE.Color(SHADER_PALETTE.canvas) },
   }
 }
 

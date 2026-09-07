@@ -1,18 +1,4 @@
-/* ==========================================================================
-   Cloth swatch. The product route's material study.
 
-   A piece of the actual garment, cut from its own cloth parameters, that the
-   visitor can turn. Turning it is the whole point: at an angle the drape
-   stops being a picture and starts being an object, and the sheen sweeps
-   across the surface because the light stays put while the cloth moves.
-
-   The turn is a range input rather than a drag handler. A slider is keyboard
-   operable, announces its value, and works on a touch screen without
-   stealing the scroll, which a pointer-drag surface does not.
-
-   Changing colourway updates the uniform in place instead of rebuilding the
-   material, so picking a colour is instant rather than a shader compile.
-   ========================================================================== */
 
 import {
   useEffect,
@@ -32,11 +18,10 @@ import { clamp01, lag, useClothStage } from './useClothStage'
 import { SHADER_PALETTE } from './shaders/palette'
 import { createClothMaterial, type ClothParameters, type ClothUniforms } from './shaders/cloth'
 
-/** Generous, so the cloth still fills the frame at the limits of the turn. */
 const COVER = 2
 const SWATCH_CAMERA = { position: [0, 0, 3.4] as const, fov: 34 }
 const REST_TILT = -0.17
-const VOID = new THREE.Color(SHADER_PALETTE.sumiVoid)
+const VOID = new THREE.Color(SHADER_PALETTE.charcoal)
 
 export const TURN_LIMIT = 40
 
@@ -62,8 +47,6 @@ function SwatchPlane({ drape, sheen, weave, tint, turn, progress, bounds }: Plan
     [segments],
   )
 
-  /* Tint is deliberately absent from the key. It is written into the uniform
-     below, so switching colourway costs nothing. */
   const material = useMemo(
     () => createClothMaterial([3, 3], { drape, sheen, weave }),
     [drape, sheen, weave],
@@ -72,7 +55,7 @@ function SwatchPlane({ drape, sheen, weave, tint, turn, progress, bounds }: Plan
   useEffect(() => {
     const uniforms = material.uniforms as ClothUniforms
     const ink = new THREE.Color(tint)
-    uniforms.uInk.value.copy(ink)
+    uniforms.uBase.value.copy(ink)
     uniforms.uDeep.value.copy(ink.clone().lerp(VOID, 0.55))
   }, [material, tint])
 
@@ -98,8 +81,6 @@ function SwatchPlane({ drape, sheen, weave, tint, turn, progress, bounds }: Plan
     uniforms.uSize.value.set(width, height)
     uniforms.uTime.value = state.clock.elapsedTime
 
-    /* A swatch is studied, not scrolled past, so the scroll only settles it
-       slightly rather than leaning the whole sheet back. */
     uniforms.uScroll.value = clamp01(progress.current) * 0.35
 
     let targetX = 0
@@ -127,8 +108,6 @@ function SwatchPlane({ drape, sheen, weave, tint, turn, progress, bounds }: Plan
     gust.current += (targetGust - gust.current) * lag(delta, 0.38)
     uniforms.uGust.value = gust.current
 
-    /* Ease toward the slider value rather than snapping to it, so a click on
-       the track still reads as the cloth being turned by hand. */
     turned.current += (turn.current - turned.current) * lag(delta, 0.16)
     if (group.current) {
       group.current.rotation.y = turned.current
@@ -143,11 +122,11 @@ function SwatchPlane({ drape, sheen, weave, tint, turn, progress, bounds }: Plan
 }
 
 export interface ClothSwatchProps {
-  /** The garment's own cloth parameters. */
+
   cloth: Omit<ClothParameters, 'tint' | 'opacity'>
-  /** Active colourway, as a hex string from the collection data. */
+
   tint: string
-  /** Accessible name for the turn control. */
+
   label: string
   className?: string
 }
@@ -204,7 +183,7 @@ export function ClothSwatch({ cloth, tint, label, className }: ClothSwatchProps)
           step={1}
           value={degrees}
           onChange={onTurn}
-          aria-valuetext={`${degrees} degrees`}
+          aria-valuetext={`${degrees} stopni`}
         />
       </div>
     </div>

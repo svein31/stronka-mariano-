@@ -1,15 +1,4 @@
-/* ==========================================================================
-   Sumi cloth. The opening image of the site.
 
-   A single sheet of inked cloth hanging in the dark. It leans as the visitor
-   unrolls past it, and it swells toward the cursor with a lag, so the surface
-   always feels like it is a half beat behind the hand, which is exactly how
-   heavy cloth behaves.
-
-   The scene renders nothing at all when the budget is off. The route always
-   supplies a composed DOM alternative, so reduced motion gets a still frame
-   rather than a hole.
-   ========================================================================== */
 
 import { useEffect, useMemo, useRef, type ReactNode, type RefObject } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
@@ -25,12 +14,8 @@ import {
 } from './useClothStage'
 import { createClothMaterial, type ClothParameters, type ClothUniforms } from './shaders/cloth'
 
-/** How far the plane extends past the viewport. The excess is where the
- *  bokashi edge dissolve happens, so it has to sit outside the frame. */
 const COVER = 1.4
 
-/** Progress below which the cloth stays calm. Above it, the scroll leans the
- *  cloth back as it leaves. */
 const LEAN_START = 0.34
 
 export const HERO_CAMERA = { position: [0, 0, 7.4] as const, fov: 38 }
@@ -49,16 +34,11 @@ function Drape({ cloth, cover, progress, bounds }: DrapeProps) {
 
   const segments = Math.max(12, budget.clothSegments)
 
-  /* A unit plane. The shader multiplies by uSize, so the cloth's world extent
-     follows the viewport without a buffer ever being rebuilt. */
   const geometry = useMemo(
     () => new THREE.PlaneGeometry(1, 1, segments, Math.max(12, Math.round(segments * 0.75))),
     [segments],
   )
 
-  /* Keyed on the individual values rather than on the cloth object. A caller
-     passing an inline literal would otherwise hand back a new identity every
-     render and compile a fresh shader program each time. */
   const { drape, sheen, weave, tint, opacity } = cloth
   const material = useMemo(
     () => createClothMaterial([12, 8], { drape, sheen, weave, tint, opacity }),
@@ -73,7 +53,6 @@ function Drape({ cloth, cover, progress, bounds }: DrapeProps) {
     [geometry, material],
   )
 
-  /* Lagged values live in refs, not state. Nothing here should ever render. */
   const pointer = useRef(new THREE.Vector2(0, 0))
   const gust = useRef(0)
   const drift = useRef(new THREE.Vector2(0, 0))
@@ -83,8 +62,6 @@ function Drape({ cloth, cover, progress, bounds }: DrapeProps) {
     const live = pointerState()
     const rect = bounds.current
 
-    /* The plane spans the viewport times cover, so the world size follows
-       directly from the camera frustum R3F already computed. */
     const width = viewport.width * cover
     const height = viewport.height * cover
     uniforms.uSize.value.set(width, height)
@@ -93,8 +70,6 @@ function Drape({ cloth, cover, progress, bounds }: DrapeProps) {
     const raw = clamp01((progress.current - LEAN_START) / (1 - LEAN_START))
     uniforms.uScroll.value = raw
 
-    /* Map the cursor into plane space. Bounds are only measured while the
-       host is on screen, which is the only time this loop runs. */
     let targetX = 0
     let targetY = 0
     let inside = false
@@ -111,9 +86,6 @@ function Drape({ cloth, cover, progress, bounds }: DrapeProps) {
         live.clientY <= rect.bottom
     }
 
-    /* Two different time constants. The bulge tracks the hand closely enough
-       to feel connected; the gust decays slowly so a flick leaves the cloth
-       moving after the cursor has stopped. */
     const trackLag = lag(delta, 0.09)
     const gustLag = lag(delta, 0.34)
 
@@ -125,8 +97,6 @@ function Drape({ cloth, cover, progress, bounds }: DrapeProps) {
     gust.current += (targetGust - gust.current) * gustLag
     uniforms.uGust.value = gust.current
 
-    /* Counter-drift. The plane moves a little against the cursor so the
-       bulge reads as depth rather than as a bump on a flat sheet. */
     const driftLag = lag(delta, 0.5)
     drift.current.x += (-targetX * 0.028 - drift.current.x) * driftLag
     drift.current.y += (-targetY * 0.02 - drift.current.y) * driftLag
@@ -143,21 +113,17 @@ function Drape({ cloth, cover, progress, bounds }: DrapeProps) {
   )
 }
 
-/** Wool and cashmere at 690 grams, the Nagashi Coat's own numbers. */
-const HERO_CLOTH: ClothParameters = { drape: 0.82, sheen: 0.18, weave: 0.22 }
+const HERO_CLOTH: ClothParameters = { drape: 0.46, sheen: 0.08, weave: 0.8, tint: '#d7c9b0' }
 
-export interface SumiClothProps {
-  /** Physical parameters. Defaults to the Nagashi Coat's wool and cashmere. */
+export interface PrintedClothProps {
+
   cloth?: ClothParameters
   className?: string
-  /**
-   * Extra scene contents, rendered into the same canvas. Atmosphere belongs
-   * here rather than in a second WebGL context.
-   */
+
   children?: ReactNode
 }
 
-export function SumiCloth({ cloth = HERO_CLOTH, className, children }: SumiClothProps) {
+export function PrintedCloth({ cloth = HERO_CLOTH, className, children }: PrintedClothProps) {
   const budget = useMotionBudget()
   const hostRef = useRef<HTMLDivElement>(null)
   const { progress, bounds } = useClothStage(hostRef, budget.enabled)

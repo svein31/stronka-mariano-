@@ -1,84 +1,29 @@
-# Product
+# Handmade trousers — product specification
 
-## Register
+## Purpose and agreed scope
+Polish storefront for small-batch, hand-decorated trousers. Warm/tactile/confident. Material and visible making persuade through specifics. Temporary name centralized in shared/brand.json.
+Frontend AND durable backend now; payments deferred. Prepare a server payment adapter boundary, never fake card forms or paid status. Deliver source to GitHub, no deployment.
 
-brand
+## Routes
+Home /; filterable /shop; /shop/:slug; editable /cart; /checkout; protected /order-confirmation; /process; /journal and /journal/:slug; /faq; /size-guide; /contact; /terms; /privacy; /shipping-returns; /404 and unknown-path recovery. Preserve /collection, /collection/:slug and /atelier aliases.
+Home pairs asymmetric garment/process visuals. Shop filters material/technique/size with reset and empty state. Detail includes full, detail and illustrative process gallery; care, measurements, variants and sample lead time.
 
-## Users
+## Data and architecture
+Retain React19/Vite/TypeScript, GSAP/Lenis, R3F. Node24 HTTP API plus SQLite on durable disk. Development launches API+Vite together; production Node serves built SPA and API on one origin. Static-only hosting is insufficient.
+Shared demo catalog defines integer grosz, variants, sizes, drape/sheen/weave, madeToOrder=true. All initial items are made to order; stock-backed items rejected until inventory transactions exist.
+POST /api/quote canonicalizes lines and shipping and returns totals/fingerprint. POST /api/orders validates customer/address/acknowledgement/quote and transactionally records a snapshot. Status awaiting_arrangement; payment not_requested. Idempotency keys return the same order on retry and reject conflicting payloads. GET /api/orders/:id needs a private bearer token (hash only in DB). No public order list; local owner CLI.
+Contact and newsletter requests persist separately. Newsletter is pending confirmation, not an active mailing integration.
+Limit cart 20 lines/10 units per variant; reject duplicate/unknown variants. Bound JSON body, strings and requests; prepared SQL; explicit trusted origin for writes; security headers; bounded rate limiter. No DB/secrets in git/static output. Demo mode default and marked. Live mode requires seller/contact/returns data, approved policy version and HTTPS origin.
 
-Fashion-literate visitors arriving with gallery-like attention: prospective clients weighing a
-four-figure coat, buyers and press evaluating the house, and people who found the brand through
-a single image and want to understand the world behind it.
+## Checkout
+Size/variant → cart → server quote → contact/address/Poland shipping or pickup → acknowledge unpaid request → persisted server receipt. Quote mismatch/offline failures preserve inputs. Clear cart only on success. Ambiguous failures preserve exact request/key in the current tab for retries; private receipt key stays tab-local. No PII/token in URLs. No auto email or production acceptance.
+Future payments derive amount from stored order, use provider idempotency, verify signed webhooks and update status atomically. Redirect alone cannot mark paid. No provider selected now.
 
-They browse deliberately, mostly on a calibrated monitor at night or on a phone in transit.
-They are not comparison shopping. They are deciding whether this atelier's point of view is
-serious enough to spend money and attention on.
+## Content and legal
+Photography is generated demonstration imagery, not proof of real craft. Prices, measurements, 10–15-day lead times and product details are fixtures needing approval. No invented studio location or certifications.
+Policies explicitly draft: seller identity/returns address/legal review needed. Made after order does not automatically eliminate withdrawal; personalized-goods exceptions require assessment. Complaint rights remain. Cite UOKiK sources in policy. Privacy identifies storage/copies/recipients/retention decisions and rights; no analytics.
+Before public launch replace fixtures/photos, approve policies and configure real identity/hosting backups/retention.
 
-The job to be done: be convinced that the restraint is intentional and the craft is real, then
-find a specific garment and see it clearly enough to buy it.
-
-## Product Purpose
-
-A multi-route brand and shoppable lookbook for an avant-garde atelier in the monastic Japanese
-lane. The site exists to communicate a point of view first and to sell second. Spectacle is
-permitted and expected because in this register the design IS the product: a visitor's impression
-of the house is the thing being manufactured.
-
-Success looks like a visitor asking "how was this made?" rather than scrolling past. Secondary
-success is a lookbook that resolves into a real product detail page with honest materials,
-sizing, and composition information, so the conviction converts.
-
-## Brand Personality
-
-Three words: **austere, sculptural, unhurried**.
-
-Voice is quiet and precise. Sentences are short and declarative. The brand explains nothing twice
-and never persuades. It states what a garment is made of and lets the silence do the rest.
-No exclamation, no urgency mechanics, no countdown timers, no "elevate your wardrobe".
-
-Emotional goal: the feeling of standing in a very quiet room with excellent light, looking at
-one object. Reverence, not excitement. The visitor should feel their own attention slow down.
-
-## Anti-references
-
-- Glossy centered e-commerce: hero-carousel-with-dots, equal three-card grids, "SHOP NOW" pills,
-  newsletter modal on arrival.
-- Streetwear noise: neon drench, glitch-for-decoration, marquee overload, drop-culture urgency.
-- Editorial-magazine reflex: European didone or oldstyle italic headlines, drop caps, ruled
-  broadsheet columns, lowercase tracked metadata everywhere. This brand is Kyoto and Tokyo, not
-  Milan and New York.
-- Heritage warmth: leather, brass, sepia, rustic grain applied as a costume over a modern house.
-- Crypto dark mode: near-black plus one saturated neon accent.
-- Any interface that apologizes for its own emptiness by filling it.
-
-## Design Principles
-
-1. **The void is load-bearing.** Empty space is the primary material, not leftover room. If a
-   section can lose an element and gain authority, lose it. Filling a gap is always the weaker
-   choice here.
-2. **The scroll is a picture scroll, not a page.** The visitor unrolls a single continuous
-   composition. Movement, parallax, and pacing exist to serve that unrolling. Any animation that
-   could be removed without changing the reading of the scroll should be removed.
-3. **Show the making.** Craft is proven by evidence, never claimed by adjectives. Expose the
-   material, the seam, the composition percentage, the hand of the cloth. Specificity is the
-   only persuasion this brand uses.
-4. **One dominant idea per fold.** Each viewport carries a single subject and lets it finish.
-   Long scroll, deliberate pacing, no competing focal points, no sidebar noise.
-5. **Spectacle and accommodation are designed together.** The reduced-motion experience is a
-   composed alternative, not a disabled version. Every dramatic moment must have an equivalent
-   that is still beautiful standing still.
-
-## Accessibility & Inclusion
-
-- WCAG 2.2 AA across every route and every state, including text over imagery and over 3D.
-- A complete `prefers-reduced-motion` path: parallax, scroll-scrubbing, pinned sequences, and
-  WebGL motion all resolve into deliberate static compositions. Reduced motion must never mean
-  a blank hero, a stuck section, or a missing garment.
-- Full keyboard operability across navigation, lookbook, product variants, cart entry, and the
-  3D canvas. Every interactive surface has a visible focus ring that belongs to the design
-  system rather than a browser default.
-- WebGL is progressive enhancement. A visitor on an old phone, a low-power device, or with
-  hardware acceleration disabled gets the complete brand experience without it.
-- Alt text is written in the brand voice and describes the garment as an object, never as
-  "image1" or "fashion photo".
-- No meaning is carried by motion, color, or timing alone. Contrast and text do the real work.
+## Quality
+WCAG2.2AA target: semantic headings, keyboard controls, visible focus, overlay trap/restoration, route announcements, form labels/errors, reduced-motion alternatives. Renderer/chunk/context failures preserve DOM. Responsive local images reserve dimensions; eager hero, lazy secondary imagery; WebGL outside initial bundle.
+Regression tests: all routes, filters, cart normalization/persistence, variants/fallback, authoritative pricing, malformed input, quote mismatch, idempotency/conflicts, protected receipt, persistence on reopen, contacts/consent, origin/rate/body limits and no-payment adapter. Palette audit reads CSS. Build plus tests are not browser certification.

@@ -1,38 +1,17 @@
-import { Route, Routes } from 'react-router-dom'
-import { Nav } from './components/Nav'
-import { Bag } from './components/Bag'
-import { SumiLink } from './components/Transition'
-import { ROUTES, APPOINTMENT_EMAIL } from './routes/manifest'
-import { Home, Collection, Product, Atelier, Journal, JournalArticle, NotFound } from './routes/Pages'
-
+import {Route,Routes} from 'react-router-dom'
+import brand from '../shared/brand.json'
+import {Nav} from './components/Nav'
+import {Bag} from './components/Bag'
+import {Newsletter} from './components/Newsletter'
+import {SiteLink} from './components/Transition'
+import {ROUTES,HELP_ROUTES,LEGAL_ROUTES} from './routes/manifest'
+import {Home,Collection,Product,Atelier,Journal,JournalArticle,CartPage,FAQ,SizeGuide,Contact,Legal,NotFound} from './routes/Pages'
+import {Checkout,OrderConfirmation} from './routes/Checkout'
 export function App() {
-  return (
-    <>
-      <div id="site-content">
-        <Nav />
-        <main id="main-content">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/collection" element={<Collection />} />
-            <Route path="/collection/:slug" element={<Product />} />
-            <Route path="/atelier" element={<Atelier />} />
-            <Route path="/journal" element={<Journal />} />
-            <Route path="/journal/:slug" element={<JournalArticle />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </main>
-        <footer className="footer shell">
-          <div className="footer__grid">
-            <p className="u-headline">SUMI</p>
-            <nav aria-label="Footer"><ul className="footer__list">
-              {ROUTES.map((route) => <li key={route.to}><SumiLink to={route.to}>{route.label}</SumiLink></li>)}
-            </ul></nav>
-            <div className="stack"><p>Kyoto. By appointment.</p><a className="link-rule" href={`mailto:${APPOINTMENT_EMAIL}`}>Contact the atelier</a></div>
-          </div>
-          <p className="footer__colophon">Cloth, ink, and air.</p>
-        </footer>
-      </div>
-      <Bag />
-    </>
-  )
+ return <><div id="site-content"><Nav/><main id="main-content"><Routes>
+ <Route path="/" element={<Home/>}/><Route path="/shop" element={<Collection/>}/><Route path="/collection" element={<Collection/>}/><Route path="/shop/:slug" element={<Product/>}/><Route path="/collection/:slug" element={<Product/>}/>
+ <Route path="/process" element={<Atelier/>}/><Route path="/atelier" element={<Atelier/>}/><Route path="/journal" element={<Journal/>}/><Route path="/journal/:slug" element={<JournalArticle/>}/>
+ <Route path="/cart" element={<CartPage/>}/><Route path="/checkout" element={<Checkout/>}/><Route path="/order-confirmation" element={<OrderConfirmation/>}/><Route path="/faq" element={<FAQ/>}/><Route path="/size-guide" element={<SizeGuide/>}/><Route path="/contact" element={<Contact/>}/>
+ <Route path="/terms" element={<Legal kind="terms"/>}/><Route path="/privacy" element={<Legal kind="privacy"/>}/><Route path="/shipping-returns" element={<Legal kind="shipping-returns"/>}/><Route path="*" element={<NotFound/>}/>
+ </Routes></main><footer className="footer"><div className="shell"><div className="footer__grid"><div><SiteLink className="footer__wordmark" to="/">{brand.name.toLowerCase()}</SiteLink><p>{brand.tagline}</p><p className="small">Tkanina. Kolor. Ręczna praca.</p></div><nav aria-label="Pomoc i informacje"><ul>{[...ROUTES,...HELP_ROUTES].map(r=><li key={r.to}><SiteLink to={r.to}>{r.label}</SiteLink></li>)}</ul></nav><Newsletter/></div><div className="footer__bottom"><p className="small">Kolekcja demonstracyjna · fotografie koncepcyjne AI</p><nav aria-label="Dokumenty">{LEGAL_ROUTES.map(r=><SiteLink key={r.to} to={r.to}>{r.label}</SiteLink>)}</nav></div></div></footer></div><Bag/></>
 }

@@ -1,15 +1,4 @@
-/* ==========================================================================
-   Motes. Dust held in a shaft of light.
 
-   Composable inside any Stage rather than owning a canvas, so a scene can
-   carry its own atmosphere without a second WebGL context. Everything moves
-   on the GPU: positions are generated once into a unit box and the wrap,
-   the wander, and the scroll parallax all happen in the vertex shader, so
-   the CPU never touches a buffer after mount.
-
-   Only ever used on ink movements. Dust on paper is invisible, and a layer
-   you cannot see is a layer that should not be running.
-   ========================================================================== */
 
 import { useEffect, useMemo, type RefObject } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
@@ -20,12 +9,12 @@ import { SHADER_PALETTE } from './shaders/palette'
 import { clamp01, useClothProgress } from './useClothStage'
 
 export interface MotesUniforms {
-  /* ShaderMaterial wants a string index signature on its uniform map. */
+
   [uniform: string]: THREE.IUniform
   uTime: { value: number }
-  /** 0 to 1 scroll progress. Motes streak against it, which sells depth. */
+
   uScroll: { value: number }
-  /** Half-extents of the box the dust lives in, in world units. */
+
   uExtent: { value: THREE.Vector3 }
   uSize: { value: number }
   uPixelRatio: { value: number }
@@ -34,7 +23,7 @@ export interface MotesUniforms {
   uGold: { value: THREE.Color }
 }
 
-const MOTES_VERTEX = /* glsl */ `
+const MOTES_VERTEX =  `
 ${SIMPLEX_NOISE_GLSL}
 
 uniform float uTime;
@@ -54,8 +43,6 @@ varying float vGold;
 void main() {
   vGold = aGold;
 
-  /* Rise. Each mote crosses the box on its own clock, slow enough that the
-     movement is felt as a change in the room rather than seen as motion. */
   float t = fract(aOffset + uTime * (0.006 + aDrift * 0.018) - uScroll * 0.42);
 
   vec3 p;
@@ -82,7 +69,7 @@ void main() {
 }
 `
 
-const MOTES_FRAGMENT = /* glsl */ `
+const MOTES_FRAGMENT =  `
 uniform vec3  uDust;
 uniform vec3  uGold;
 uniform float uOpacity;
@@ -115,9 +102,9 @@ function mulberry32(seed: number): () => number {
 }
 
 export interface MotesProps {
-  /** Scroll progress to parallax against. Defaults to the owning scene's. */
+
   progress?: RefObject<number>
-  /** Multiplier on the budget's mote count. */
+
   density?: number
   opacity?: number
 }
@@ -138,8 +125,6 @@ export function Motes({ progress, density = 1, opacity = 1 }: MotesProps) {
     const scales = new Float32Array(count)
     const golds = new Float32Array(count)
 
-    /* Seeded so the dust is the same field on every load. A different cloud
-       each visit reads as noise rather than as a room. */
     const random = mulberry32(0x5eed)
 
     for (let index = 0; index < count; index += 1) {
@@ -172,8 +157,8 @@ export function Motes({ progress, density = 1, opacity = 1 }: MotesProps) {
       uSize: { value: 2.3 },
       uPixelRatio: { value: 1 },
       uOpacity: { value: opacity },
-      uDust: { value: new THREE.Color(SHADER_PALETTE.washi) },
-      uGold: { value: new THREE.Color(SHADER_PALETTE.kin) },
+      uDust: { value: new THREE.Color(SHADER_PALETTE.canvas) },
+      uGold: { value: new THREE.Color(SHADER_PALETTE.clay) },
     }),
     [opacity],
   )

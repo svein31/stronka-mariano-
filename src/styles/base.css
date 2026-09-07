@@ -1,334 +1,349 @@
 @import './tokens.css';
 
-/* ==========================================================================
-   Base. Reset, grounds, type primitives, focus, and the reduced-motion
-   contract. Nothing in this file hides content by default: reveal states
-   are applied by JS only when motion is permitted, so a visitor with
-   prefers-reduced-motion, or with scripts blocked, always sees the whole
-   composition.
-   ========================================================================== */
-
-*,
-*::before,
-*::after {
+*,*::before,*::after {
   box-sizing: border-box;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-}
-
 html {
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
+  scroll-padding-top: 6rem;
 }
 
 body {
-  min-height: 100dvh;
-  background-color: var(--ground-deep);
-  color: var(--ink);
+  margin: 0;
+  background: var(--canvas);
+  color: var(--charcoal);
   font-family: var(--font-body);
-  font-size: var(--step-body);
-  font-weight: 300;
-  line-height: 1.8;
-  letter-spacing: 0.005em;
-  font-synthesis: none;
+  font-size: 1rem;
+  line-height: 1.75;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  overflow-x: hidden;
 }
 
-img,
-picture,
-video,
-canvas,
-svg {
-  display: block;
-  max-width: 100%;
-}
-
-button,
-input,
-select,
-textarea {
+button,input,textarea,select {
   font: inherit;
   color: inherit;
-  letter-spacing: inherit;
+}
+
+button,a,input,select,textarea {
+  -webkit-tap-highlight-color: transparent;
 }
 
 button {
-  background: none;
-  border: 0;
   cursor: pointer;
 }
 
 a {
   color: inherit;
+  text-underline-offset: .28em;
+  text-decoration-thickness: 1px;
+}
+
+a:hover {
   text-decoration: none;
 }
 
-ul,
-ol {
-  list-style: none;
+button:disabled {
+  cursor: wait;
+  opacity: .65;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-weight: inherit;
-  font-size: inherit;
-  line-height: inherit;
-  letter-spacing: inherit;
-  text-wrap: balance;
+h1,h2,h3,p,figure {
+  margin: 0;
 }
 
-p {
-  max-width: var(--measure);
-  text-wrap: pretty;
+p+p {
+  margin-top: 1rem;
 }
 
-/* Japanese content must declare its own language so the mincho picks the
-   correct glyph variants rather than the Chinese ones. */
-:lang(ja) {
-  font-feature-settings: 'jp78' 1;
-  line-height: 1.9;
+h1,h2,h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
 }
 
-::selection {
-  background-color: var(--shu-deep);
-  color: var(--washi);
+h1 {
+  font-size: var(--display);
+  line-height: 1.04;
+  letter-spacing: -.055em;
 }
 
-/* --- Focus ---------------------------------------------------------------
-   One ring for the whole system, drawn in aged gold so it is visible on ink
-   and on paper alike. Never a browser default. */
-:focus {
-  outline: none;
+h2 {
+  font-size: var(--headline);
+  line-height: 1.1;
+  letter-spacing: -.045em;
+}
+
+h3 {
+  font-size: 1.8rem;
+  line-height: 1.2;
+  letter-spacing: -.025em;
+}
+
+em {
+  font-weight: 400;
+  color: var(--indigo);
+}
+
+img {
+  display: block;
+  width: 100%;
+}
+
+ul {
+  padding-left: 1.25rem;
+}
+
+button {
+  border: 1px solid var(--line);
+  background: transparent;
+  padding: .6rem 1rem;
+}
+
+input:not([type=radio]):not([type=checkbox]),textarea,select {
+  border: 1px solid var(--line);
+  background: transparent;
+  border-radius: 0;
+  padding: .8rem;
+  width: 100%;
+  min-height: 48px;
+}
+
+textarea {
+  min-height: 150px;
+  resize: vertical;
+}
+
+input[type=radio],input[type=checkbox] {
+  accent-color: var(--indigo);
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
+fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+legend {
+  font-size: .875rem;
+  letter-spacing: .05em;
+  margin-bottom: 1rem;
+}
+
+fieldset+fieldset {
+  margin-top: 1.6rem;
 }
 
 :focus-visible {
-  outline: 1px solid var(--metal);
-  outline-offset: 4px;
+  outline: 2px solid var(--indigo);
+  outline-offset: 5px;
 }
 
-.movement--paper :focus-visible {
-  outline-color: var(--shu-deep);
+#route-title:focus {
+  outline: none;
 }
 
-/* --- Screen-reader only --------------------------------------------------- */
+::selection {
+  background: var(--indigo);
+  color: var(--canvas);
+}
+
 .sr-only {
   position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  margin: -1px;
+  width: 1px;
+  height: 1px;
   padding: 0;
+  margin: -1px;
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
 }
 
-/* --- Skip link -----------------------------------------------------------
-   Hidden until focused, then it lands in the top left like everything else. */
-.skip-link {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 200;
-  padding: 0.875rem 1.5rem;
-  background-color: var(--sumi-void);
-  color: var(--washi);
-  font-size: var(--step-label);
-  font-weight: 500;
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
-  transform: translateY(-100%);
-  transition: transform var(--dur-micro) var(--ease-out-expo);
-}
-
-.skip-link:focus-visible {
-  transform: translateY(0);
-}
-
-/* --- Grounds -------------------------------------------------------------
-   A movement is one full-width band of the scroll. It carries the semantic
-   tokens for its own surface, so children never need to know which world
-   they are in. */
-.movement {
-  position: relative;
-  background-color: var(--ground);
-  color: var(--ink);
-  isolation: isolate;
-}
-
-.movement--void {
-  background-color: var(--ground-deep);
-}
-
-.movement--lift {
-  background-color: var(--ground-lift);
-}
-
-/* --- Layout -------------------------------------------------------------- */
 .shell {
   width: 100%;
-  padding-inline: var(--gutter);
-}
-
-.shell--narrow {
-  max-width: 78rem;
+  max-width: 1440px;
   margin-inline: auto;
+  padding-inline: var(--space-page);
 }
 
-.stack > * + * {
-  margin-block-start: var(--space-md);
+.section {
+  padding-block: var(--section-space);
 }
 
-/* --- Type primitives ----------------------------------------------------- */
-.u-display {
-  font-family: var(--font-display);
-  font-size: var(--step-display);
-  font-weight: 600;
-  line-height: 0.92;
-  letter-spacing: -0.02em;
+.tone-ecru {
+  background: var(--ecru);
 }
 
-.u-headline {
-  font-family: var(--font-display);
-  font-size: var(--step-headline);
-  font-weight: 500;
-  line-height: 1.08;
-  letter-spacing: -0.01em;
+.tone-dark {
+  background: var(--charcoal);
+  color: var(--canvas);
 }
 
-.u-title {
-  font-family: var(--font-display);
-  font-size: var(--step-title);
-  font-weight: 500;
-  line-height: 1.24;
-  letter-spacing: 0;
-}
-
-.u-lede {
-  font-size: var(--step-lede);
-  font-weight: 300;
-  line-height: 1.72;
-  color: var(--ink-dim);
-}
-
-.u-label {
-  font-size: var(--step-label);
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: var(--track-label);
+.eyebrow {
+  font-size: .75rem;
+  letter-spacing: .13em;
   text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1.4rem;
 }
 
-.u-small {
-  font-size: var(--step-small);
-  line-height: 1.7;
-  color: var(--ink-dim);
+.small,small {
+  font-size: .8125rem;
+  line-height: 1.65;
 }
 
-/* Tategaki. Reserved for voice: spine labels, the manifesto, pull quotes.
-   Never for body copy, prices, or forms. */
-.u-vertical {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  font-family: var(--font-display);
-  font-weight: 500;
-  line-height: 1.85;
-  letter-spacing: var(--track-vertical);
+.intro {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  max-width: 42ch;
 }
 
-.u-metal {
-  color: var(--metal);
+.reading {
+  max-width: 780px;
 }
 
-.u-accent {
-  color: var(--accent);
+.reading h2 {
+  font-size: 2rem;
+  margin: 2.5rem 0 1rem;
 }
 
-/* --- Structure -----------------------------------------------------------
-   Hairlines, never shadows, and never a colored side stripe. */
-.rule {
-  height: 1px;
+.reading p {
+  margin-block: 1rem;
+}
+
+.reading li {
+  margin-bottom: .7rem;
+}
+
+.text-link {
+  display: inline-flex;
+  gap: 2rem;
+  margin-top: 1.5rem;
+  padding-block: .5rem;
+  font-size: .9rem;
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+}
+
+.text-button {
   border: 0;
-  background-color: var(--rule);
+  padding: .6rem;
+  text-decoration: underline;
+  text-underline-offset: .25em;
 }
 
-.rule--metal {
-  background-color: color-mix(in oklab, var(--metal) 45%, transparent);
+.empty {
+  padding-block: 3rem;
 }
 
-/* --- Lenis --------------------------------------------------------------- */
-html.lenis,
-html.lenis body {
-  height: auto;
+.notice,.error {
+  padding: 1.2rem;
+  border-left: 3px solid var(--indigo);
+  background: var(--ecru);
+  margin-block: 1rem;
 }
 
-.lenis.lenis-smooth {
-  scroll-behavior: auto !important;
+.error {
+  border-color: var(--clay);
+  color: var(--clay);
 }
 
-.lenis.lenis-smooth [data-lenis-prevent] {
-  overscroll-behavior: contain;
+.demo-copy {
+  color: var(--muted);
+  margin-bottom: 2rem;
 }
 
-.lenis.lenis-stopped {
-  overflow: hidden;
+.table-scroll {
+  overflow-x: auto;
 }
 
-/* --- Scrollbar ----------------------------------------------------------- */
-@supports selector(::-webkit-scrollbar) {
-  ::-webkit-scrollbar {
-    width: 9px;
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: .875rem;
+}
+
+caption {
+  text-align: left;
+  margin-bottom: 1rem;
+}
+
+th,td {
+  text-align: left;
+  padding: 1rem .7rem;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+details {
+  border-bottom: 1px solid var(--line);
+  padding: 1.2rem 0;
+}
+
+summary {
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  min-height: 30px;
+}
+
+details p {
+  margin-top: 1rem;
+}
+
+details a {
+  display: inline-block;
+  margin-top: .5rem;
+}
+
+.skip-link {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 100;
+  background: var(--charcoal);
+  color: var(--canvas);
+  padding: 1rem;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after {
+    animation-duration: .01ms!important;
+    transition-duration: .01ms!important;
+    scroll-behavior: auto!important;
   }
-
-  ::-webkit-scrollbar-track {
-    background-color: var(--sumi-void);
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background-color: var(--sumi-line);
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background-color: oklch(0.4 0.012 265);
-  }
 }
 
-/* --- Reduced motion ------------------------------------------------------
-   Transitions collapse to nothing so no state is left mid-flight. The JS
-   layer separately composes the static equivalent of every sequence, which
-   is why nothing here needs to force an element visible. */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 1ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 1ms !important;
-    scroll-behavior: auto !important;
-  }
+[data-motion=still] *,[data-motion=still] *::before,[data-motion=still] *::after {
+  animation-duration: .01ms!important;
+  transition-duration: .01ms!important;
 }
 
-/* --- Print --------------------------------------------------------------- */
 @media print {
-  body {
-    background-color: var(--washi);
-    color: var(--sumi);
+  .nav,.footer,.drawer,.drawer__scrim,.veil,.btn,.receipt button {
+    display: none!important;
   }
-
-  .nav,
-  .cursor,
-  .veil,
-  .cart-drawer {
-    display: none !important;
+  body {
+    background: white;
+    color: black;
+  }
+  .page-heading {
+    padding-top: 1rem!important;
+  }
+  .receipt {
+    max-width: none!important;
+  }
+  .section {
+    padding-block: 1rem;
+  }
+  h1 {
+    font-size: 2rem;
   }
 }
