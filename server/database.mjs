@@ -3,6 +3,7 @@ import { mkdirSync, chmodSync } from 'node:fs'
 import { dirname } from 'node:path'
 import {migrateExtensions} from './extensions.mjs'
 import {migrateService} from './migrations-service.mjs'
+import {migrateEditorial} from './editorial.mjs'
 export function openDatabase(path) {
   if (path !== ':memory:') mkdirSync(dirname(path),{recursive:true,mode:0o700})
   const db = new DatabaseSync(path)
@@ -27,5 +28,6 @@ COMMIT;`)
   }
   migrateExtensions(db)
   migrateService(db)
+  migrateEditorial(db)
   return db
 }

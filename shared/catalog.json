@@ -16,12 +16,12 @@
     "variants": [
       "Kobalt / ecru"
     ],
-    "madeToOrder": true,
-    "leadTime": "10–15 dni roboczych",
+    "madeToOrder": false,
+    "leadTime": "Termin wysyłki do potwierdzenia",
     "composition": "100% bawełna · płótno 280 g/m²",
     "care": "Prać na lewej stronie w 30°C, delikatnie. Bez wybielacza i suszarki. Prasować nadruk przez tkaninę, od spodu.",
-    "summary": "Szeroka nogawka, naturalne płótno i roślinny ślad w kobalcie.",
-    "detail": "Motyw odbijany osobno na każdym fragmencie tkaniny. Drobne różnice w nasyceniu są częścią projektu.",
+    "summary": "Szeroki krój. Roślinny wzór.",
+    "detail": "Ręcznie tworzony projekt wzoru. Gotowe spodnie produkowane w Bangladeszu.",
     "slot": "botanika",
     "alt": "Spodnie ecru z szerokimi nogawkami i kobaltowymi liśćmi odbijanymi stemplem.",
     "tint": "#d7c9b0",
@@ -30,7 +30,8 @@
       "sheen": 0.08,
       "weave": 0.8,
       "weight": 280
-    }
+    },
+    "productionCountry": "Bangladesz"
   },
   {
     "slug": "gest",
@@ -48,12 +49,12 @@
     "variants": [
       "Kreda / granat"
     ],
-    "madeToOrder": true,
-    "leadTime": "10–15 dni roboczych",
+    "madeToOrder": false,
+    "leadTime": "Termin wysyłki do potwierdzenia",
     "composition": "100% bawełna · płótno 320 g/m²",
     "care": "Prać na lewej stronie w 30°C, delikatnie. Bez wybielacza i suszarki. Prasować od spodu.",
-    "summary": "Granatowe płótno. Jasna linia prowadzona bez pośpiechu.",
-    "detail": "Swobodny krój i szeroki ślad pędzla. Układ dekoracji może różnić się między parami.",
+    "summary": "Granat. Swobodna linia.",
+    "detail": "Ręcznie tworzony projekt wzoru. Gotowe spodnie produkowane w Bangladeszu.",
     "slot": "gest",
     "alt": "Granatowe spodnie z szerokimi nogawkami i nieregularnymi jasnymi liniami pędzla.",
     "tint": "#344b64",
@@ -62,7 +63,8 @@
       "sheen": 0.07,
       "weave": 0.7,
       "weight": 320
-    }
+    },
+    "productionCountry": "Bangladesz"
   },
   {
     "slug": "forma",
@@ -80,12 +82,12 @@
     "variants": [
       "Glina / len"
     ],
-    "madeToOrder": true,
-    "leadTime": "10–15 dni roboczych",
+    "madeToOrder": false,
+    "leadTime": "Termin wysyłki do potwierdzenia",
     "composition": "100% len · 240 g/m²",
     "care": "Prać delikatnie w 30°C na lewej stronie. Suszyć swobodnie. Prasować lekko wilgotne, od spodu.",
-    "summary": "Naturalny len i kompozycja w kolorze gliny i błękitu.",
-    "detail": "Prosty krój pozostawia miejsce na strukturę lnu. Każdy kształt nanoszony jest oddzielnie.",
+    "summary": "Prosty krój. Gra kształtów.",
+    "detail": "Ręcznie tworzony projekt wzoru. Gotowe spodnie produkowane w Bangladeszu.",
     "slot": "forma",
     "alt": "Lniane spodnie w naturalnym kolorze z geometrycznym nadrukiem w odcieniach gliny i błękitu.",
     "tint": "#c7ad82",
@@ -94,6 +96,7 @@
       "sheen": 0.1,
       "weave": 0.92,
       "weight": 240
-    }
+    },
+    "productionCountry": "Bangladesz"
   }
 ]

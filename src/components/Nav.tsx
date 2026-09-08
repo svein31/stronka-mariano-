@@ -10,7 +10,9 @@ import { useFocusTrap } from '../lib/focus'
 import { useCart } from '../state/cart'
 import { SiteLink, useTransitioning } from './Transition'
 import brand from '../../shared/brand.json'
-import { ROUTES } from '../routes/manifest'
+import {useScrollAwareHeader,useWAAPI} from '../lib/motion-layers'
+import {useTravel} from './Transition'
+import { ROUTES,EXPLORE_ROUTES } from '../routes/manifest'
 
 const SCRIM_AT = 64
 
@@ -18,7 +20,9 @@ export function Nav() {
   const location = useLocation()
   const traveling = useTransitioning()
   const { scroll, reducedMotion } = useCapabilities()
-  const { count, setOpen } = useCart()
+  const { count, setOpen, open:bagOpen } = useCart()
+  const travel=useTravel(),badge=useRef<HTMLSpanElement>(null)
+  useWAAPI(badge,count)
 
   const shell = useRef<HTMLElement>(null)
   const progress = useRef<HTMLDivElement>(null)
@@ -26,6 +30,7 @@ export function Nav() {
   const toggle = useRef<HTMLButtonElement>(null)
   const [open, setOpenPanel] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  useScrollAwareHeader(shell,open||bagOpen||traveling)
 
   useEffect(() => {
     const trigger = ScrollTrigger.create({
@@ -57,13 +62,6 @@ export function Nav() {
       scroll.start()
     }
   }, [open, scroll])
-
-  useEffect(() => {
-    const query = window.matchMedia('(min-width: 56.001rem)')
-    const onChange = () => { if (query.matches) setOpenPanel(false) }
-    query.addEventListener('change', onChange)
-    return () => query.removeEventListener('change', onChange)
-  }, [])
 
   // A route change means the panel has done its job.
   useEffect(() => {
@@ -106,7 +104,7 @@ export function Nav() {
             aria-haspopup="dialog"
           >
             Koszyk
-            <span className="nav__bag-count" aria-hidden="true">
+            <span ref={badge} className="nav__bag-count" aria-hidden="true">
               {String(count).padStart(2, '0')}
             </span>
             <span className="sr-only">
@@ -148,7 +146,7 @@ export function Nav() {
         data-lenis-prevent
       >
         <button className="nav-panel__close link-rule" type="button" onClick={close}>Zamknij menu</button>
-        <nav aria-label="Strony">
+        <form className="nav-panel__search" onSubmit={e=>{e.preventDefault();const q=String(new FormData(e.currentTarget).get('q')||'');setOpenPanel(false);travel('/shop?q='+encodeURIComponent(q))}}><label className="field">Szukaj modelu<input name="q" type="search" placeholder="Nazwa, materiał, wzór" maxLength={100}/></label><button type="submit">Szukaj</button></form><nav aria-label="Strony">
           <ul className="nav-panel__list">
             {ROUTES.map((route) => (
               <li className="nav-panel__item" key={route.to}>
@@ -165,7 +163,7 @@ export function Nav() {
               </li>
             ))}
           </ul>
-        </nav>
+        </nav><nav className="nav-panel__extras" aria-label="Odkrywaj">{EXPLORE_ROUTES.map(r=><SiteLink key={r.to} to={r.to}>{r.label}</SiteLink>)}</nav><SiteLink className="nav-panel__campaign" to="/lookbook"><img src="/media/forma-studio.webp" alt="Koncepcyjny model Forma" width="480" height="640" loading="lazy"/>Lookbook</SiteLink>
       </motion.div>
     </>
   )

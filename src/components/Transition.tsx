@@ -17,6 +17,8 @@ import gsap from 'gsap'
 import { useCapabilities } from '../lib/capabilities'
 import { EASE } from '../lib/motion'
 import brand from '../../shared/brand.json'
+import {flushSync} from 'react-dom'
+import {transitionView,type RunningTransition} from '../lib/view-transition'
 
 const COVER = 0.2
 const CLEAR = 0.24
@@ -53,6 +55,7 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
   const markRef = useRef<HTMLSpanElement>(null)
   const timelineRef = useRef<gsap.core.Timeline | null>(null)
   const pendingDestination = useRef<string | null>(null)
+  const viewTransition = useRef<RunningTransition|null>(null)
   const scrollRef = useRef(scroll)
   scrollRef.current = scroll
   const [traveling, setTraveling] = useState(false)
@@ -65,6 +68,17 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
 
       if (reducedMotion || ['/cart','/checkout','/order-confirmation','/admin','/track','/personalize','/newsletter'].some(path => to.startsWith(path) || location.pathname.startsWith(path))) {
         navigate(to)
+        return
+      }
+
+      const productSlug=to.match(/^\/shop\/([a-z0-9-]+)$/)?.[1]
+      if(typeof document.startViewTransition==='function'&&(productSlug||window.matchMedia('(pointer: coarse)').matches)){
+        if(viewTransition.current)return
+        setTraveling(true)
+        const transition=transitionView(()=>flushSync(()=>navigate(to)),productSlug)
+        viewTransition.current=transition
+        if(transition)void transition.finished.finally(()=>{viewTransition.current=null;setTraveling(false)}).catch(()=>{})
+        else {navigate(to);setTraveling(false)}
         return
       }
 
@@ -110,6 +124,7 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!reducedMotion && navigationType !== 'POP') return
+    viewTransition.current?.skipTransition()
     timelineRef.current?.kill()
     timelineRef.current = null
     if (veilRef.current) gsap.set(veilRef.current, { scaleY: 0, pointerEvents: 'none' })
@@ -161,6 +176,7 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     return () => {
       timelineRef.current?.kill()
+      viewTransition.current?.skipTransition()
     }
   }, [])
 

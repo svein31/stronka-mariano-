@@ -1,3 +1,9 @@
+# Aktualizacja modelu marki i interfejsu
+
+Autorskie designy są tworzone ręcznie. Gotowe spodnie są produkowane przez partnerów w Bangladeszu i trafiają do Polski. Nie opisujemy gotowych spodni jako ręcznie szytych w polskiej pracowni. Termin na karcie produktu dotyczy dostępności i wysyłki.
+
+Główna, Studio i Lookbook korzystają z edytora sekcji. Dropy mają prywatny szkic, odrębną publikację, harmonogram, archiwum i historię. Szczegóły kontraktu oraz współpracy animacji: RELEASE.md. Ten aktualny kierunek zastępuje historyczną narrację o lokalnym ręcznym wykonywaniu produktów.
+
 # Handmade trousers — cinematic storefront
 
 ## Scope and direction

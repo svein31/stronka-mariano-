@@ -10,6 +10,7 @@ export function saveProduct(db,slug,input) {
  if(!row)throw new HttpError(404,'Nie znaleziono produktu.')
  if(input.revision!==row.revision)throw new HttpError(409,'Produkt został zmieniony. Odśwież dane przed zapisem.')
  const old=JSON.parse(row.data),next={...old}
+ next.madeToOrder=false;next.productionCountry='Bangladesz'
  for(const key of ['name','material','printStyle','leadTime','composition','care','summary','detail','alt'])next[key]=textField(input[key],key,1,key==='care'||key==='detail'?2000:400)
  if(!Number.isSafeInteger(input.price)||input.price<100||input.price>10000000)throw new HttpError(400,'Nieprawidłowa cena w groszach.')
  next.price=input.price;next.available=input.available===true
@@ -38,7 +39,14 @@ export function saveProduct(db,slug,input) {
  if(!validMediaPath(input.video,true))throw new HttpError(400,'Film musi być przesłanym plikiem MP4.')
  next.video=input.video
  if(next.video&&!db.prepare("SELECT 1 FROM assets WHERE id=? AND mime='video/mp4' AND order_id IS NULL").get(next.video.split('/').pop().split('.')[0]))throw new HttpError(400,'Brak filmu.')
- const saved=db.prepare('UPDATE products SET data=?,revision=revision+1 WHERE slug=? AND revision=?').run(JSON.stringify(next),slug,row.revision)
- if(!saved.changes)throw new HttpError(409,'Produkt został zmieniony. Odśwież dane.')
+ db.exec('BEGIN IMMEDIATE')
+ try{
+  const now=new Date().toISOString()
+  db.prepare('INSERT INTO product_versions(slug,revision,snapshot,created_at) VALUES(?,?,?,?) ON CONFLICT DO NOTHING').run(slug,row.revision,row.data,now)
+  const saved=db.prepare('UPDATE products SET data=?,revision=revision+1 WHERE slug=? AND revision=?').run(JSON.stringify(next),slug,row.revision)
+  if(!saved.changes)throw new HttpError(409,'Produkt został zmieniony. Odśwież dane.')
+  db.prepare('INSERT INTO product_versions(slug,revision,snapshot,created_at) VALUES(?,?,?,?)').run(slug,row.revision+1,JSON.stringify(next),now)
+  db.exec('COMMIT')
+ }catch(e){db.exec('ROLLBACK');throw e}
  return {...next,revision:row.revision+1}
 }

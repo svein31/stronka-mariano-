@@ -1,3 +1,7 @@
+# Aktualny kierunek: autorska moda
+
+Duże fotografie, krótki tekst, mocna typografia, czerń i biel. Materiały koncepcyjne pozostają oznaczone. Menu: Sklep / Kolekcje / Studio, z Lookbookiem, Archiwum, projektem i pomocą w pełnym menu. Zasady mobilnych efektów i odpowiedzialności silników animacji są opisane w RELEASE.md i mają pierwszeństwo przed wcześniejszym opisem prezentacji.
+
 # Handmade trousers — cinematic dark / liquid glass
 
 ## Confirmed direction

@@ -26,6 +26,13 @@ function route(path,method,summary,schema,role='public',binary=false){
  for(const status of ['4XX','5XX'])operation.responses[status]={description:'Błąd operacji',content:{'application/json':{schema:{$ref:'#/components/schemas/Error'}}}}
  paths[path]={...paths[path],[method]:operation}
 }
+route('/editorial','get','Publiczne strony i dropy po uwzględnieniu harmonogramu',null)
+route('/admin/editorial','get','Wersje robocze, historia i biblioteka publicznych mediów',null,'owner')
+route('/admin/editorial','post','Utwórz wersję roboczą dropu','Record','owner')
+route('/admin/editorial/{id}','post','Zapisz, opublikuj, zaplanuj, wycofaj, usuń lub przywróć dokument; wymaga revision','Record','owner')
+route('/admin/editorial/products/{slug}','get','Historia zmian produktu',null,'owner')
+route('/admin/editorial/products/{slug}/restore','post','Przywróć historyczny produkt z kontrolą revision',object({historyId:number,revision:number}),'owner')
+route('/drops/{id}/interest','post','Zainteresowanie dropem i potwierdzenie zapisu newslettera',object({email:{type:'string',format:'email'},consent:{const:true}}))
 route('/service/orders/{id}','get','Centrum zamówienia, wyceny, wiadomości i przesyłka',null,'customer')
 route('/service/orders/{id}/decision','post','Akceptacja konkretnej wersji wyceny','Decision','customer')
 route('/service/orders/{id}/messages','post','Wiadomość klienta z deduplikacją','Message','customer')

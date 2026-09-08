@@ -27,9 +27,9 @@ function renderRoute(path) {
  return renderToStaticMarkup(h(MemoryRouter,{initialEntries:[path]},h(CapabilitiesProvider,null,h(CartProvider,null,h(StoreProvider,null,h(InteractionProvider,null,h(TransitionProvider,null,h(App))))))))
 }
 for(const [path,title] of [
-['/','Nie ma'],['/shop','Wybierz swój ślad.'],['/collection','Wybierz swój ślad.'],['/process','Od kawałka płótna.'],['/atelier','Od kawałka płótna.'],['/journal','Pomiędzy szwami.'],
+['/','Własny ślad.'],['/shop','Wybierz swoją parę.'],['/collection','Wybierz swoją parę.'],['/process','Projekt jest nasz.'],['/atelier','Projekt jest nasz.'],['/journal','Notatki.'],
 ['/cart','Twoje wybory.'],['/checkout','Twoja para. Twoje dane.'],['/order-confirmation','Twoje potwierdzenie.'],['/faq','Dobrze wiedzieć.'],['/size-guide','Zmierz. Sprawdź. Zapisz.'],['/contact','Porozmawiajmy o parze.'],['/terms','Warunki zamówienia.'],['/privacy','Twoja prywatność.'],['/shipping-returns','Dostawa i zwroty.'],
-['/admin','Twoja pracownia.'],['/track','Wszystkie ustalenia. Jedno miejsce.'],['/newsletter','Twój wybór wiadomości.'],['/personalize/botanika','Para według Twoich wymiarów.'],
+['/collections','Nowy rozdział.'],['/lookbook','Forma w ruchu.'],['/archive','Archiwum.'],['/help','Jesteśmy blisko.'],['/personalize','Zacznij od modelu.'],['/admin','Twoja marka.'],['/track','Wszystkie ustalenia. Jedno miejsce.'],['/newsletter','Twój wybór wiadomości.'],['/personalize/botanika','Para według Twoich wymiarów.'],
 ...garments.map(g=>['/shop/'+g.slug,g.name]),...garments.map(g=>['/collection/'+g.slug,g.name]),...entries.map(e=>['/journal/'+e.slug,e.title]),
 ...['/404','/unknown','/shop/unknown','/journal/unknown'].map(p=>[p,'Ta strona się spruła.'])
 ]) test('Complete static document: '+path,()=>{
@@ -42,7 +42,7 @@ test('Material, technique and size filters combine and support no matches',()=>{
  assert.deepEqual(filterGarments(new URLSearchParams('material=Len&size=M')).map(p=>p.slug),['forma'])
  assert.deepEqual(filterGarments(new URLSearchParams('material=Len&print=Pędzel')),[])
  assert.equal(filterGarments(new URLSearchParams()).length,3)
- assert.match(renderRoute('/shop?material=absent'),/Nie ma pary pasującej/)
+ assert.match(renderRoute('/shop?material=absent'),/Jeszcze nie ta para/)
 })
 test('Garment selection and care remain usable without a renderer',()=>{
  const html=renderRoute('/shop/botanika')

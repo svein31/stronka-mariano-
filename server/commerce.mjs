@@ -26,12 +26,11 @@ export function quoteOrder(body,db) {
     record(input)
     const product=(db?listProducts(db):catalog).find(p=>p.slug===input.slug)
     if (!product || product.available===false || !product.sizes.includes(input.size) || !product.variants.includes(input.variant)) fail('Wybrany produkt lub wariant jest niedostępny.')
-    if (!product.madeToOrder) throw new HttpError(409,'Ten produkt wymaga potwierdzenia dostępności.')
     if (!Number.isInteger(input.quantity) || input.quantity<1 || input.quantity>commerce.maxQuantity) fail('Wybierz od 1 do 10 sztuk.')
     const key=[product.slug,input.size,input.variant].join('|')
     if (seen.has(key)) fail('Powtórzona pozycja koszyka.')
     seen.add(key)
-    return {slug:product.slug,name:product.name,size:input.size,variant:input.variant,quantity:input.quantity,price:product.price,leadTime:product.leadTime,madeToOrder:true}
+    return {slug:product.slug,name:product.name,size:input.size,variant:input.variant,quantity:input.quantity,price:product.price,leadTime:product.leadTime,madeToOrder:product.madeToOrder===true}
   }).sort((a,b)=>[a.slug,a.size,a.variant].join('|').localeCompare([b.slug,b.size,b.variant].join('|')))
   const shipping=commerce.shipping.find(s=>s.id===body.shipping)
   if (!shipping) fail('Wybierz sposób dostawy.')

@@ -10,12 +10,17 @@ import {PhotoPlate} from './PhotoPlate'
 import {recommendSize} from '../lib/sizing'
 import {useDraft} from './ServiceStates'
 export function ProductGallery({product,variant}:{product:Garment;variant:string}){
- const [index,setIndex]=useState(0)
- useEffect(()=>setIndex(0),[variant,product.slug])
+ const [index,setIndex]=useState(0),[open,setOpen]=useState(false),[zoom,setZoom]=useState(false)
+ const dialog=useRef<HTMLDialogElement>(null),opener=useRef<HTMLButtonElement>(null),start=useRef({x:0,y:0}),{scroll}=useCapabilities()
+ useEffect(()=>{setIndex(0);setZoom(false)},[variant,product.slug])
+ useEffect(()=>{if(!open||!dialog.current)return;dialog.current.showModal();scroll.stop();return()=>{dialog.current?.close();scroll.start();opener.current?.focus({preventScroll:true})}},[open,scroll])
  const entries=product.gallery?.filter(p=>!p.variant||p.variant===variant)||[]
- const images=entries.length?entries:[{src:'/media/'+product.slot+'-studio.webp',alt:product.alt,kind:'full'},{src:'/media/process.webp',alt:'Koncepcyjny widok ręcznego nadruku na płótnie.',kind:'process'}]
+ const images=entries.length?entries:[{src:'/media/'+product.slot+'-studio.webp',alt:product.alt,kind:'full'},{src:'/media/'+product.slot+'.webp',alt:product.alt,kind:'detail'}]
  const current=images[index]||images[0]
- return <div className="product-gallery"><figure><PhotoPlate key={current.src} slot={index?'process':product.slot+'-studio'} src={entries.length?current.src:undefined} alt={current.alt} eager/><figcaption className="photo-caption">{entries.length?current.alt:'Ilustracje koncepcyjne AI — do zastąpienia zdjęciami produktu.'}</figcaption></figure><div className="gallery-controls" aria-label="Zdjęcia produktu">{images.map((im,i)=><button type="button" key={im.src+i} aria-pressed={i===index} onClick={()=>setIndex(i)}>{i+1} / {{full:'Cała para',detail:'Nadruk',seam:'Szew',process:'Proces'}[im.kind]||'Zdjęcie'}</button>)}</div>{product.video&&<video controls preload="none" src={product.video} aria-label="Film z wykonania produktu"><track kind="captions"/>Twoja przeglądarka nie obsługuje filmu.</video>}</div>
+ const next=(offset:number)=>{setIndex(i=>(i+offset+images.length)%images.length);setZoom(false)}
+ return <div className="product-gallery"><figure className="gallery-main"><PhotoPlate key={current.src} slot={product.slot+'-studio'} src={entries.length||index?current.src:undefined} alt={current.alt} eager/><button ref={opener} className="gallery-expand" onClick={()=>setOpen(true)} aria-haspopup="dialog">Powiększ</button><figcaption className="photo-caption">{entries.length?current.alt:'Ilustracje koncepcyjne AI — do zastąpienia zdjęciami produktu.'}</figcaption></figure><div className="gallery-controls" aria-label="Zdjęcia produktu">{images.map((im,i)=><button type="button" key={im.src+i} aria-pressed={i===index} onClick={()=>setIndex(i)}>{i+1} / {{full:'Cała para',detail:'Detal',seam:'Szew',process:'Proces'}[im.kind]||'Zdjęcie'}</button>)}</div>{product.video&&<video controls preload="none" src={product.video} aria-label="Film produktu">Twoja przeglądarka nie obsługuje filmu.</video>}
+ {open&&typeof document!=='undefined'&&createPortal(<dialog ref={dialog} className="gallery-lightbox" aria-label={'Galeria '+product.name} onCancel={()=>setOpen(false)} onKeyDown={e=>{if(e.key==='ArrowRight')next(1);if(e.key==='ArrowLeft')next(-1)}}><div className="gallery-lightbox__toolbar"><span>{product.name} · {index+1}/{images.length}</span><button onClick={()=>next(-1)} aria-label="Poprzednie zdjęcie">←</button><button onClick={()=>next(1)} aria-label="Następne zdjęcie">→</button><button aria-pressed={zoom} onClick={()=>setZoom(z=>!z)}>{zoom?'Cały kadr':'Detal 180%'}</button><button onClick={()=>setOpen(false)}>Zamknij</button></div><div className="gallery-lightbox__viewport" data-zoom={zoom} onPointerDown={e=>{start.current={x:e.clientX,y:e.clientY}}} onPointerUp={e=>{const dx=e.clientX-start.current.x,dy=e.clientY-start.current.y;if(!zoom&&Math.abs(dx)>60&&Math.abs(dy)<60)next(dx>0?-1:1)}}><img src={current.src} alt={current.alt} draggable={false}/></div></dialog>,document.body)}
+ </div>
 }
 export function SizeAssistant({product,onSelect}:{product:Garment;onSelect?:(size:string)=>void}){
  const [result,setResult]=useState<ReturnType<typeof recommendSize>|null>(null),measurements=useDraft('workshop.measurements')

@@ -12,6 +12,7 @@ import {newsletterMail} from './mail.mjs'
 import {serviceRoutes} from './routes-service.mjs'
 import {assetData} from './media-store.mjs'
 import {openApi} from './openapi.mjs'
+import {editorialRoutes} from './editorial.mjs'
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.webp':'image/webp','.jpg':'image/jpeg','.png':'image/png','.ico':'image/x-icon','.woff2':'font/woff2'}
 async function bodyOf(req,max=32768) {
   if (!req.headers['content-type']?.startsWith('application/json')) throw new HttpError(415,'Wymagany format JSON.')
@@ -46,6 +47,7 @@ export function createApp({db,config,dist=resolve('dist'),rateLimit=120,env=proc
           if(restricted[url.pathname])limit(db,url.pathname+':'+ip,restricted[url.pathname],600000)
         }
         if(url.pathname==='/api/openapi.json'&&req.method==='GET')return json(res,200,openApi)
+        if(await editorialRoutes({db,env,config,req,res,url,json,bodyOf,requestId}))return
         if(await serviceRoutes({db,env,config,req,res,url,json,bodyOf,requestId}))return
         if(await workshopRoutes({db,env,config,req,res,url,json,bodyOf,requestId}))return
         if(req.method==='GET' && url.pathname==='/api/health'){db.prepare('SELECT 1').get();return json(res,200,{ok:true})}

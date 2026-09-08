@@ -1,0 +1,160 @@
+[
+  {
+    "id": "home",
+    "kind": "page",
+    "slug": "home",
+    "title": "Własny ślad.",
+    "eyebrow": "MARIANO / AUTORSKIE PROJEKTY",
+    "description": "Ręcznie tworzone wzory. Gotowe kolekcje.",
+    "image": "/media/botanika.webp",
+    "mobileImage": "/media/botanika-studio.webp",
+    "alt": "Koncepcyjny projekt spodni Botanika.",
+    "ctaLabel": "Odkryj kolekcję",
+    "ctaHref": "/shop",
+    "theme": "dark",
+    "height": "full",
+    "layout": "split",
+    "align": "left",
+    "overlay": 35,
+    "focalX": 50,
+    "focalY": 50,
+    "showHome": false,
+    "showDate": true,
+    "showCountdown": true,
+    "showProducts": true,
+    "showWaitlist": false,
+    "showArchive": true,
+    "enabled": true,
+    "position": 0,
+    "productSlugs": [],
+    "launchAt": "",
+    "endsAt": "",
+    "badge": "",
+    "video": "",
+    "seoTitle": "Mariano — autorskie projekty spodni",
+    "seoDescription": "Autorskie wzory tworzone ręcznie. Produkcja gotowych kolekcji w Bangladeszu.",
+    "sections": [
+      {
+        "id": "home-drops",
+        "type": "drops",
+        "title": "Dropy",
+        "text": "Nowy rozdział.",
+        "enabled": true,
+        "theme": "light",
+        "limit": 4
+      },
+      {
+        "id": "home-products",
+        "type": "products",
+        "title": "Wybierz swoją parę.",
+        "enabled": true,
+        "theme": "light",
+        "productSlugs": [
+          "botanika",
+          "gest",
+          "forma"
+        ]
+      },
+      {
+        "id": "home-story",
+        "type": "image",
+        "title": "Od rysunku do kolekcji.",
+        "text": "Tworzymy wzory ręcznie. Gotowe spodnie produkują nasi partnerzy w Bangladeszu.",
+        "image": "/media/gest.webp",
+        "alt": "Koncepcyjny projekt spodni Gest.",
+        "ctaLabel": "Poznaj markę",
+        "ctaHref": "/process",
+        "enabled": true,
+        "theme": "dark"
+      },
+      {
+        "id": "cloth-motion",
+        "type": "cloth",
+        "title": "Własny wzór.",
+        "text": "Ręcznie projektujemy wzory. Produkcję gotowych spodni powierzamy partnerom w Bangladeszu.",
+        "enabled": true,
+        "theme": "dark"
+      }
+    ]
+  },
+  {
+    "id": "process",
+    "kind": "page",
+    "slug": "process",
+    "title": "Projekt jest nasz.",
+    "eyebrow": "MARIANO / STUDIO",
+    "description": "Ręcznie tworzymy designy. Produkcję powierzamy partnerom w Bangladeszu.",
+    "image": "/media/gest.webp",
+    "alt": "Koncepcyjny wzór kolekcji Mariano.",
+    "ctaLabel": "Zobacz projekty",
+    "ctaHref": "/shop",
+    "theme": "dark",
+    "height": "large",
+    "sections": [
+      {
+        "id": "design",
+        "type": "text",
+        "title": "01 / Rysunek",
+        "text": "Każdy wzór zaczyna się od ręcznie tworzonego projektu.",
+        "enabled": true,
+        "theme": "light"
+      },
+      {
+        "id": "production",
+        "type": "image",
+        "title": "02 / Produkcja",
+        "text": "Nasi partnerzy w Bangladeszu produkują gotowe spodnie na podstawie naszych projektów. Nie są to spodnie szyte ręcznie w naszej pracowni.",
+        "image": "/media/forma-studio.webp",
+        "alt": "Ilustracja koncepcyjna gotowego modelu Forma, nie zdjęcie fabryki.",
+        "enabled": true,
+        "theme": "light"
+      },
+      {
+        "id": "delivery",
+        "type": "text",
+        "title": "03 / Gotowa kolekcja",
+        "text": "Gotowe produkty trafiają do Polski. Dostępność i termin wysyłki sprawdzisz przy wybranej parze.",
+        "enabled": true,
+        "theme": "dark"
+      }
+    ]
+  },
+  {
+    "id": "lookbook",
+    "kind": "page",
+    "slug": "lookbook",
+    "title": "Forma w ruchu.",
+    "eyebrow": "MARIANO / LOOKBOOK",
+    "description": "Trzy spojrzenia na autorski wzór.",
+    "image": "/media/forma.webp",
+    "alt": "Koncepcyjny projekt Forma.",
+    "ctaLabel": "Zobacz modele",
+    "ctaHref": "/shop",
+    "theme": "dark",
+    "height": "large",
+    "sections": [
+      {
+        "id": "look-1",
+        "type": "image",
+        "title": "Botanika 01",
+        "image": "/media/botanika.webp",
+        "alt": "Koncepcyjna stylizacja z modelem Botanika.",
+        "ctaLabel": "Zobacz produkt",
+        "ctaHref": "/shop/botanika",
+        "enabled": true,
+        "theme": "light"
+      },
+      {
+        "id": "look-2",
+        "type": "image",
+        "title": "Gest 02",
+        "image": "/media/gest.webp",
+        "alt": "Koncepcyjna stylizacja z modelem Gest.",
+        "ctaLabel": "Zobacz produkt",
+        "ctaHref": "/shop/gest",
+        "enabled": true,
+        "theme": "dark"
+      }
+    ]
+  }
+]

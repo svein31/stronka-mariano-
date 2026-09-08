@@ -66,6 +66,8 @@ export function useFocusTrap(
     })
 
     const onKeyDown = (event: KeyboardEvent): void => {
+      const surface=container.current
+      if(!surface)return
       if (event.key === 'Escape') {
         event.preventDefault()
         escape.current?.()

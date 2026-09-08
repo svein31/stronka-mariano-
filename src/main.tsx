@@ -8,6 +8,7 @@ import { CapabilitiesProvider } from './lib/capabilities'
 import { CartProvider } from './state/cart'
 import { TransitionProvider } from './components/Transition'
 import { StoreProvider } from './state/store'
+import {EditorialProvider} from './state/editorial'
 import {InteractionProvider} from './components/Interactions'
 import { App } from './App'
 import './styles/base.css'
@@ -21,9 +22,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <CapabilitiesProvider>
-        <StoreProvider>
+        <StoreProvider><EditorialProvider>
           <CartProvider><InteractionProvider><TransitionProvider><App /></TransitionProvider></InteractionProvider></CartProvider>
-        </StoreProvider>
+        </EditorialProvider></StoreProvider>
       </CapabilitiesProvider>
     </BrowserRouter>
   </StrictMode>,
@@ -31,3 +32,5 @@ createRoot(document.getElementById('root')!).render(
 
 import './styles/cinematic.css'
 import './styles/workshop.css'
+import './styles/editorial.css'
+import './styles/motion-layers.css'

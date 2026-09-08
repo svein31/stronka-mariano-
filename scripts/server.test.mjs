@@ -28,7 +28,7 @@ async function orderBody(overrides={}) {
 test('Health and catalog expose demo mode and disabled payments',async()=>{
  assert.equal((await request('/api/health')).status,200)
  const {data}=await request('/api/catalog')
- assert.equal(data.demo,true);assert.equal(data.paymentsEnabled,false);assert.equal(data.products.length,3);assert.ok(data.products.every(p=>p.madeToOrder))
+ assert.equal(data.demo,true);assert.equal(data.paymentsEnabled,false);assert.equal(data.products.length,3);assert.ok(data.products.every(p=>!p.madeToOrder&&p.productionCountry==='Bangladesz'))
 })
 test('Server calculates canonical totals and ignores all client money',async()=>{
  const {data,status}=await request('/api/quote',{lines:[{...line,price:1,total:1}],shipping:'courier',total:1})

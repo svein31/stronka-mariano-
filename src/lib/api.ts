@@ -10,7 +10,7 @@ export async function api<T>(path:string,init:RequestInit={}):Promise<T> {
  catch {throw new ApiError('Brak odpowiedzi serwera. Sprawdź połączenie i ponów próbę.')}
  let data
  try {data=await response.json()} catch {throw new ApiError('Serwer zwrócił nieprawidłową odpowiedź. Ponów próbę.',response.ok?0:response.status)}
- if(!response.ok) throw new ApiError(data.error||'Nie udało się zapisać danych.',response.status,data.fields||{},Number(response.headers.get('Retry-After'))||60)
+ if(!response.ok||typeof data?.error==='string') throw new ApiError(data?.error||'Nie udało się zapisać danych.',response.ok?503:response.status,data?.fields||{},Number(response.headers.get('Retry-After'))||60)
  if(!data || typeof data!=='object') throw new ApiError('Nieprawidłowa odpowiedź serwera.')
  return data as T
 }

@@ -1,3 +1,7 @@
+# Mariano — autorskie kolekcje
+
+Aktualny model: ręcznie tworzone designy, gotowe produkty wytwarzane przez partnerów w Bangladeszu i sprowadzane do Polski. [Instrukcja wydania, dropów, animacji i Netlify](RELEASE.md) opisuje nowy panel oraz paczki ZIP. Płatności pozostają wyłączone.
+
 # Handmade trousers workshop
 
 React 19 + TypeScript + Vite storefront, GSAP/Lenis choreography and optional Three.js fabric studies. A Node 24 + SQLite backend stores orders, contact messages and newsletter requests. **Payments are disabled.**
@@ -104,7 +108,7 @@ Browser-based visual/keyboard/screen-reader QA, actual WebGL behavior on devices
 
 ## Before public use
 
-Review DESIGN.md and PRODUCT.md. Replace generated media, demo prices, specifications and measurements with real approved data. Confirm taxes, shipping, lead times, seller identity, policies and privacy/retention details with the owner and legal reviewer. The legal draft does not assume every made-to-order item is exempt from withdrawal.
+Review DESIGN.md and PRODUCT.md. Replace generated media, demo prices, specifications and measurements with real approved data. Confirm taxes, shipping, lead times, seller identity, policies and privacy/retention details with the owner and legal reviewer. The legal draft requires owner review against the actual ready-made sales model.
 
 The default STORE_MODE is demo. Setting live requires complete seller fields, an HTTPS PUBLIC_ORIGIN, POLICIES_APPROVED=true and a non-draft POLICY_VERSION. This configuration gate does not substitute for reviewing actual legal copy or replacing demo assets. Configure and test SMTP, the owner account/TOTP, private backups and the owner workflow before accepting real enquiries. Payments remain disabled even in live mode.
 
