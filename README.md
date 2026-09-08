@@ -2,7 +2,9 @@
 
 React 19 + TypeScript + Vite storefront, GSAP/Lenis choreography and optional Three.js fabric studies. A Node 24 + SQLite backend stores orders, contact messages and newsletter requests. **Payments are disabled.**
 
-The placeholder brand name lives in `shared/brand.json`. Product and shipping data are shared by the frontend and API. All current products, prices, sizing and generated photographs are demonstrative and need approval before public sales.
+Read [INTEGRATIONS.md](INTEGRATIONS.md) for the new owner panel, SMTP, backups, HTTPS and setup checklist. Private account credentials must be configured on the computer/server running the app; they are not shipped through GitHub.
+
+The placeholder brand name lives in `shared/brand.json`. SQLite is the authoritative editable product catalog; shared/catalog.json seeds new databases and supplies a static demonstration fallback. Shipping data remains shared. All current products, prices, sizing and generated photographs are demonstrative and need approval before public sales.
 
 ## Run on your own computer (Windows, macOS or Linux)
 
@@ -11,8 +13,9 @@ Install Node.js 24 or later and Git. Open Terminal / PowerShell, then:
 ```sh
 git clone https://github.com/svein31/stronka-mariano-.git
 cd stronka-mariano-
-git switch codex/cinematic-glass
+git switch codex/workshop-management
 npm ci
+npm run owner:setup
 npm run dev
 ```
 
@@ -40,9 +43,9 @@ Open http://127.0.0.1:3001. The Node process serves both `dist/` and `/api/`. Th
 
 The basket survives reloads in localStorage. Prices restored from storage are ignored in favor of the catalog. Checkout requests an authoritative quote, requires the chosen size/variant, and submits an order with a quote fingerprint. A changed quote returns 409 for review. Only the API can calculate persisted totals.
 
-Orders have `awaiting_arrangement` status and `not_requested` payment status. Saving is an enquiry pending workshop confirmation, not a completed sale. No payment is collected and no automatic email is sent.
+Orders have `awaiting_arrangement` status and `not_requested` payment status. Saving is an enquiry pending workshop confirmation, not a completed sale. No payment is collected. Configured SMTP sends confirmations and progress updates through an encrypted durable outbox.
 
-A cryptographically random idempotency key and private receipt token are saved in sessionStorage **before** submission. Retry after a lost response sends the same request and returns the same order. Ambiguous network/5xx failures retain the pending request; definitive validation failures unlock editing. The receipt token is sent in an Authorization header, never in the URL, and only its hash is stored in SQLite. Closing the browser session can remove access to the receipt. Print/save it before closing.
+A cryptographically random idempotency key and private receipt token are saved in sessionStorage **before** submission. Retry after a lost response sends the same request and returns the same order. Ambiguous network/5xx failures retain the pending request; definitive validation failures unlock editing. The receipt token is sent in an Authorization header, never in the URL, and only its hash is stored in SQLite. Receipt access expires after 30 days and may be revoked. Email tracking links use a separate expiring secret in the fragment, removed by the tracking page. Closing the browser session can remove access to the receipt. Print/save it before closing.
 
 ## Backend contract
 
@@ -56,7 +59,7 @@ A cryptographically random idempotency key and private receipt token are saved i
 | POST /api/contact | Store a message, does not email it |
 | POST /api/newsletter | Store consent in pending_confirmation, does not start sending |
 
-Mutation requests require an allowed Origin and JSON. Inputs and body size are bounded. SQL statements are parameterized. Orders use a transaction and a unique idempotency key. The server sends no-store for API responses, sanitizes internal errors and applies a basic in-memory per-IP rate limit. For public use, configure a trusted TLS proxy and edge rate limiting; untrusted forwarded IP headers are deliberately ignored.
+Mutation requests require an allowed Origin and JSON. Inputs and body size are bounded. SQL statements are parameterized. Orders use a transaction and a unique idempotency key. The server sends no-store for API responses, sanitizes internal errors and applies a persistent SQLite per-IP and per-endpoint rate limits. For public use, configure a trusted TLS proxy and edge rate limiting; untrusted forwarded IP headers are deliberately ignored.
 
 ## Data and owner access
 
@@ -67,7 +70,7 @@ npm run orders
 npm run orders -- ORDER_UUID
 ```
 
-This local, read-only owner CLI lists the latest 50 orders or displays an order's customer and canonical snapshot. It requires filesystem access to the database; there is deliberately no unauthenticated web administration endpoint. Contact and newsletter tables can be reviewed with a local SQLite client. The owner is responsible for access control, retention and backups. Never paste customer exports into public issues.
+This local, read-only owner CLI lists the latest 50 orders or displays an order's customer and canonical snapshot. It requires filesystem access to the database; the /admin web panel additionally provides authenticated catalog, order and customization management. Contact and newsletter tables can be reviewed with a local SQLite client. The owner is responsible for access control, retention and backups. Never paste customer exports into public issues.
 
 ## Payment integration seam
 
@@ -101,7 +104,7 @@ Browser-based visual/keyboard/screen-reader QA, actual WebGL behavior on devices
 
 Review DESIGN.md and PRODUCT.md. Replace generated media, demo prices, specifications and measurements with real approved data. Confirm taxes, shipping, lead times, seller identity, policies and privacy/retention details with the owner and legal reviewer. The legal draft does not assume every made-to-order item is exempt from withdrawal.
 
-The default STORE_MODE is demo. Setting live requires complete seller fields, an HTTPS PUBLIC_ORIGIN, POLICIES_APPROVED=true and a non-draft POLICY_VERSION. This configuration gate does not substitute for reviewing actual legal copy or replacing demo assets. Configure email and an owner workflow before accepting real enquiries. Payments remain disabled even in live mode.
+The default STORE_MODE is demo. Setting live requires complete seller fields, an HTTPS PUBLIC_ORIGIN, POLICIES_APPROVED=true and a non-draft POLICY_VERSION. This configuration gate does not substitute for reviewing actual legal copy or replacing demo assets. Configure and test SMTP, the owner account/TOTP, private backups and the owner workflow before accepting real enquiries. Payments remain disabled even in live mode.
 
 ## Cinematic redesign / motion responsibilities
 

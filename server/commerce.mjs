@@ -1,6 +1,8 @@
 import { createHash, randomUUID, timingSafeEqual } from 'node:crypto'
 import catalog from '../shared/catalog.json' with {type:'json'}
 import commerce from '../shared/commerce.json' with {type:'json'}
+import {listProducts} from './catalog.mjs'
+import {notifyOrder} from './mail.mjs'
 export class HttpError extends Error { constructor(status,message,fields={}) { super(message); this.status=status; this.fields=fields } }
 export const hash = value => createHash('sha256').update(value).digest('hex')
 const fail = (message,fields={}) => {throw new HttpError(400,message,fields)}
@@ -16,14 +18,14 @@ export function emailField(value) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) fail('Sprawdź adres e-mail.',{email:'Podaj prawidłowy adres e-mail.'})
   return email
 }
-export function quoteOrder(body) {
+export function quoteOrder(body,db) {
   record(body)
   if (!Array.isArray(body.lines) || !body.lines.length || body.lines.length>commerce.maxLines) fail('Koszyk musi zawierać od 1 do 20 pozycji.')
   const seen=new Set()
   const lines=body.lines.map(input=>{
     record(input)
-    const product=catalog.find(p=>p.slug===input.slug)
-    if (!product || !product.sizes.includes(input.size) || !product.variants.includes(input.variant)) fail('Wybrany produkt lub wariant jest niedostępny.')
+    const product=(db?listProducts(db):catalog).find(p=>p.slug===input.slug)
+    if (!product || product.available===false || !product.sizes.includes(input.size) || !product.variants.includes(input.variant)) fail('Wybrany produkt lub wariant jest niedostępny.')
     if (!product.madeToOrder) throw new HttpError(409,'Ten produkt wymaga potwierdzenia dostępności.')
     if (!Number.isInteger(input.quantity) || input.quantity<1 || input.quantity>commerce.maxQuantity) fail('Wybierz od 1 do 10 sztuk.')
     const key=[product.slug,input.size,input.variant].join('|')
@@ -50,7 +52,7 @@ function customerData(input,shipping) {
   }
   return result
 }
-export function createOrder(db,config,body) {
+export function createOrder(db,config,body,env={}) {
   record(body)
   if (body.acknowledged!==true) fail('Potwierdź zapoznanie się z warunkami.',{acknowledged:'Wymagane potwierdzenie.'})
   if (typeof body.idempotencyKey!=='string' || !/^[a-zA-Z0-9-]{24,80}$/.test(body.idempotencyKey)) fail('Brak identyfikatora próby.')
@@ -66,10 +68,12 @@ export function createOrder(db,config,body) {
       db.exec('COMMIT')
       return {id:previous.id,replayed:true}
     }
-    const quote=quoteOrder(body)
+    const quote=quoteOrder(body,db)
     if (quote.fingerprint!==body.quoteFingerprint) throw new HttpError(409,'Cena lub dostawa uległy zmianie. Sprawdź nowe podsumowanie.')
     const id=randomUUID()
     db.prepare(`INSERT INTO orders (id,idempotency_key,request_hash,access_hash,created_at,status,payment_status,currency,amount,snapshot,customer,policy_version,demo) VALUES (?,?,?,?,?,'awaiting_arrangement','not_requested',?,?,?,?,?,?)`).run(id,body.idempotencyKey,requestHash,accessHash,new Date().toISOString(),'PLN',quote.total,JSON.stringify(quote),JSON.stringify(customer),config.policyVersion,Number(config.demo))
+    db.prepare('UPDATE orders SET access_expires=? WHERE id=?').run(Date.now()+30*86400000,id)
+    notifyOrder(db,env,id,'Zapisaliśmy Twoje zamówienie','order:'+id)
     db.exec('COMMIT')
     return {id,replayed:false}
   } catch(error) { db.exec('ROLLBACK'); throw error }
@@ -77,6 +81,6 @@ export function createOrder(db,config,body) {
 export function readOrder(db,id,token) {
   const row=db.prepare('SELECT * FROM orders WHERE id=?').get(id)
   const valid=typeof token==='string' && /^[a-f0-9]{64}$/.test(token)
-  if (!row || !valid || !timingSafeEqual(Buffer.from(row.access_hash,'hex'),Buffer.from(hash(token),'hex'))) throw new HttpError(404,'Nie znaleziono potwierdzenia lub klucz jest nieprawidłowy.')
+  if (!row || !valid || row.access_revoked || row.access_expires<Date.now() || !timingSafeEqual(Buffer.from(row.access_hash,'hex'),Buffer.from(hash(token),'hex'))) throw new HttpError(404,'Nie znaleziono potwierdzenia lub klucz jest nieprawidłowy.')
   return {id:row.id,createdAt:row.created_at,status:row.status,paymentStatus:row.payment_status,demo:Boolean(row.demo),quote:JSON.parse(row.snapshot),customer:JSON.parse(row.customer)}
 }

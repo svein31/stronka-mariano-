@@ -45,5 +45,8 @@ Full pinning, parallax and 3D are desktop-only and require explicit session opt-
 Real-phone performance has not been measured in this environment. Browser/device QA remains an explicit release gate; do not present SSR tests as profiling.
 
 ## Do / don't
+## Workshop tools extension
+Quick view uses a glass dialog with opaque product photography, native size/variant controls, Escape and focus restoration. Only one shopping overlay opens at a time. Size guidance uses a model's owner-approved measurements; unverified fixtures never produce a recommendation. Personalization is a separate quotation request, not a priced cart item. Tracking and owner tools use solid, readable surfaces and no decorative route transitions. Timeline shows recorded events, an explicit unknown ETA and no fabricated progress photographs. Owner screens expose editing and order actions immediately, with labelled fields and save/error states.
+
 Do alternate dark story and white products, expose process immediately, keep one accent, genuine product detail, visible focus and dimensions.
 Don't copy Nike branding, invent provenance, add countdowns or false scarcity, place glass on forms/prose, hide essentials behind animation, claim payment or email success, or enable the full mobile effect without device evidence.

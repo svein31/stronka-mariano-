@@ -16,6 +16,8 @@ const {TransitionProvider}=await server.ssrLoadModule('/src/components/Transitio
 const {InteractionProvider}=await server.ssrLoadModule('/src/components/Interactions.tsx')
 const {visualPolicyFor}=await server.ssrLoadModule('/src/lib/visual-policy.ts')
 const {PhotoPlate}=await server.ssrLoadModule('/src/components/PhotoPlate.tsx')
+const {ProductGallery,SizeAssistant}=await server.ssrLoadModule('/src/components/ProductTools.tsx')
+const {recommendSize}=await server.ssrLoadModule('/src/lib/sizing.ts')
 const {garments,filterGarments,sortGarments}=await server.ssrLoadModule('/src/data/collection.ts')
 const {entries}=await server.ssrLoadModule('/src/data/journal.ts')
 const {detectWebGL}=await server.ssrLoadModule('/src/lib/motion.ts')
@@ -27,6 +29,7 @@ function renderRoute(path) {
 for(const [path,title] of [
 ['/','Nie ma'],['/shop','Wybierz swój ślad.'],['/collection','Wybierz swój ślad.'],['/process','Od kawałka płótna.'],['/atelier','Od kawałka płótna.'],['/journal','Pomiędzy szwami.'],
 ['/cart','Twoje wybory.'],['/checkout','Twoja para. Twoje dane.'],['/order-confirmation','Twoje potwierdzenie.'],['/faq','Dobrze wiedzieć.'],['/size-guide','Zacznij od miarki.'],['/contact','Porozmawiajmy o parze.'],['/terms','Warunki zamówienia.'],['/privacy','Twoja prywatność.'],['/shipping-returns','Dostawa i zwroty.'],
+['/admin','Twoja pracownia.'],['/track','Od ustaleń do wysyłki.'],['/newsletter','Twój wybór wiadomości.'],['/personalize/botanika','Para według Twoich wymiarów.'],
 ...garments.map(g=>['/shop/'+g.slug,g.name]),...garments.map(g=>['/collection/'+g.slug,g.name]),...entries.map(e=>['/journal/'+e.slug,e.title]),
 ...['/404','/unknown','/shop/unknown','/journal/unknown'].map(p=>[p,'Ta strona się spruła.'])
 ]) test('Complete static document: '+path,()=>{
@@ -159,4 +162,23 @@ test('Successful checkout preserves items added after the submitted request',()=
  assert.equal(remaining.find(l=>l.slug==='botanika').quantity,1)
  assert.equal(remaining.find(l=>l.slug==='forma').quantity,1)
  assert.deepEqual(consumeCart(normalizeCart([line]),[line]),[])
+})
+
+test('Size assistant requires verified model measurements and explains fitting or no-match results',()=>{
+ const input={waist:78,hips:98,inseam:76,fit:'regular'}
+ assert.equal(recommendSize(garments[0],input).size,null)
+ const model={...garments[0],measurementsVerified:true,measurements:[{size:'M',waist:82,hips:106,inseam:76},{size:'L',waist:86,hips:112,inseam:77}]}
+ assert.equal(recommendSize(model,input).size,'M')
+ assert.equal(recommendSize(model,{...input,fit:'relaxed'}).size,'L')
+ assert.equal(recommendSize(model,{...input,waist:200}).size,null)
+ assert.match(recommendSize(model,input).message,/4 cm zapasu/)
+ assert.match(renderToStaticMarkup(h(MemoryRouter,null,h(SizeAssistant,{product:garments[0]}))),/po zatwierdzeniu rzeczywistych pomiarów/)
+})
+test('Owner variants determine gallery imagery and restored cart price',()=>{
+ const product={...garments[0],variants:['New variant'],price:65000,gallery:[{src:'/media/forma.webp',alt:'Fixture variant photo',variant:'New variant',kind:'detail'},{src:'/media/gest.webp',alt:'Other variant photo',variant:'Other',kind:'full'}]}
+ const html=renderToStaticMarkup(h(ProductGallery,{product,variant:'New variant'}))
+ assert.match(html,/\/media\/forma.webp/);assert.doesNotMatch(html,/\/media\/gest.webp/)
+ const cart=normalizeCart([{...line,variant:'New variant'}],[product])
+ assert.equal(cart[0].price,65000);assert.equal(cart[0].variant,'New variant')
+ assert.match(renderRoute('/shop'),/Szybki podgląd/)
 })

@@ -19,7 +19,7 @@ import brand from './shared/brand.json' with { type: 'json' }
 
 export default defineConfig({
   plugins: [react(), {name:'brand-title', transformIndexHtml: (html: string) => html.replace('WORKSHOP_TITLE', brand.name.replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]!)))}],
-  server: {host:'127.0.0.1', port:5173, strictPort:true, proxy:{'/api':{target:'http://127.0.0.1:3001',changeOrigin:false}}},
+  server: {host:'127.0.0.1', port:5173, strictPort:true, proxy:{'/api':{target:'http://127.0.0.1:3001',changeOrigin:false},'/media/uploads':{target:'http://127.0.0.1:3001',changeOrigin:false}}},
   build: {
     target: 'es2022',
     cssCodeSplit: true,

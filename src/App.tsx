@@ -7,9 +7,12 @@ import {SiteLink} from './components/Transition'
 import {ROUTES,HELP_ROUTES,LEGAL_ROUTES} from './routes/manifest'
 import {Home,Collection,Product,Atelier,Journal,JournalArticle,CartPage,FAQ,SizeGuide,Contact,Legal,NotFound} from './routes/Pages'
 import {Checkout,OrderConfirmation} from './routes/Checkout'
+import {Tracking,Personalization,NewsletterAction} from './routes/Workshop'
+import {Admin} from './routes/Admin'
 export function App() {
  return <><div id="site-content"><Nav/><main id="main-content"><Routes>
  <Route path="/" element={<Home/>}/><Route path="/shop" element={<Collection/>}/><Route path="/collection" element={<Collection/>}/><Route path="/shop/:slug" element={<Product/>}/><Route path="/collection/:slug" element={<Product/>}/>
+ <Route path="/admin" element={<Admin/>}/><Route path="/track" element={<Tracking/>}/><Route path="/personalize/:slug" element={<Personalization/>}/><Route path="/newsletter" element={<NewsletterAction/>}/>
  <Route path="/process" element={<Atelier/>}/><Route path="/atelier" element={<Atelier/>}/><Route path="/journal" element={<Journal/>}/><Route path="/journal/:slug" element={<JournalArticle/>}/>
  <Route path="/cart" element={<CartPage/>}/><Route path="/checkout" element={<Checkout/>}/><Route path="/order-confirmation" element={<OrderConfirmation/>}/><Route path="/faq" element={<FAQ/>}/><Route path="/size-guide" element={<SizeGuide/>}/><Route path="/contact" element={<Contact/>}/>
  <Route path="/terms" element={<Legal kind="terms"/>}/><Route path="/privacy" element={<Legal kind="privacy"/>}/><Route path="/shipping-returns" element={<Legal kind="shipping-returns"/>}/><Route path="*" element={<NotFound/>}/>
