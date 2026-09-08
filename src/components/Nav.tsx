@@ -5,7 +5,7 @@ import { useLocation } from 'react-router-dom'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import {motion} from 'motion/react'
 import {GlassGlint} from './Interactions'
-import { useCapabilities, useVisualPolicy } from '../lib/capabilities'
+import { useCapabilities } from '../lib/capabilities'
 import { useFocusTrap } from '../lib/focus'
 import { useCart } from '../state/cart'
 import { SiteLink, useTransitioning } from './Transition'
@@ -17,8 +17,7 @@ const SCRIM_AT = 64
 export function Nav() {
   const location = useLocation()
   const traveling = useTransitioning()
-  const { scroll, reducedMotion, systemReducedMotion, motionPaused, setMotionPaused, richEffects, setRichEffects } = useCapabilities()
-  const policy=useVisualPolicy()
+  const { scroll, reducedMotion } = useCapabilities()
   const { count, setOpen } = useCart()
 
   const shell = useRef<HTMLElement>(null)
@@ -99,16 +98,7 @@ export function Nav() {
           ))}
         </nav>
 
-        <div className="nav__actions"><button className="nav__effects" type="button" aria-pressed={richEffects} disabled={!policy.richAvailable} onClick={()=>setRichEffects(!richEffects)} aria-label="Włącz efekty przestrzenne" title="Opcjonalne efekty przestrzenne na mocniejszych komputerach">3D</button>
-          <button
-            className="nav__motion"
-            type="button"
-            aria-pressed={reducedMotion}
-            disabled={systemReducedMotion}
-            onClick={() => setMotionPaused(!motionPaused)}
-          >
-            {systemReducedMotion ? 'Bez animacji' : (motionPaused ? 'Wznów ruch' : 'Pauza ruchu')}
-          </button>
+        <div className="nav__actions">
           <button
             type="button"
             className="nav__bag"

@@ -92,7 +92,7 @@ export function detectWebGL(): boolean {
   }
 }
 
-export type PerfTier = 'high' | 'low'
+export type PerfTier = 'high' | 'medium' | 'low'
 
 /**
  * Decides how much geometry and how many particles a scene is allowed to
@@ -105,9 +105,11 @@ export function perfTier(): PerfTier {
   const coarse =
     typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
 
-  if (memory !== undefined && memory <= 4) return 'low'
-  if (cores !== undefined && cores <= 4) return 'low'
-  if (coarse) return 'low'
+  if (memory !== undefined && memory <= 2) return 'low'
+  if (cores !== undefined && cores <= 2) return 'low'
+  if (memory !== undefined && memory <= 4) return 'medium'
+  if (cores !== undefined && cores <= 4) return 'medium'
+  if (coarse) return 'medium'
   return 'high'
 }
 

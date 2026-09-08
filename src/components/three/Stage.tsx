@@ -16,9 +16,26 @@
    ========================================================================== */
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { Canvas, type RootState } from '@react-three/fiber'
-import { useMotionBudget } from '../../lib/capabilities'
+import { Canvas, useFrame, type RootState } from '@react-three/fiber'
+import { useCapabilities, useMotionBudget } from '../../lib/capabilities'
 import { EnhancementBoundary } from '../EnhancementBoundary'
+
+function AdaptiveQuality({running}: {running: boolean}) {
+  const {reduceQuality, tier} = useCapabilities()
+  const sample = useRef({seconds: 0, frames: 0, warmup: 2})
+  useEffect(() => { sample.current = {seconds: 0, frames: 0, warmup: 2} }, [running, tier])
+  useFrame((_, delta) => {
+    if (!running || delta <= 0) return
+    const current = sample.current
+    if (current.warmup > 0) { current.warmup -= delta; return }
+    current.seconds += delta
+    current.frames += 1
+    if (current.seconds < 4) return
+    if (current.frames / current.seconds < 35) reduceQuality()
+    sample.current = {seconds: 0, frames: 0, warmup: 2}
+  })
+  return null
+}
 
 export interface StageProps {
   children: ReactNode
@@ -135,6 +152,7 @@ export function Stage({
           canvasRef.current.addEventListener('webglcontextlost', onContextLost)
         }}
       >
+        <AdaptiveQuality running={running}/>
         {children}
       </Canvas>
       </EnhancementBoundary>

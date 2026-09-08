@@ -113,10 +113,6 @@ select option { background: var(--night); color: var(--canvas); }
 .nav__links { gap: 1.5rem; }
 .nav__link { font-size: .875rem; font-weight: 700; }
 .nav__actions { gap: .8rem; }
-.nav__motion { font-size: .75rem; min-height: 44px; }
-.nav__effects { border-radius: 50%; font-size: .75rem; min-width: 40px; min-height: 40px; padding: .35rem; }
-.nav__effects[aria-pressed=true] { background: var(--accent); color: var(--charcoal); border-color: var(--accent); }
-.nav__effects:disabled { opacity: .7; cursor: default; }
 .nav__bag { font-weight: 700; }
 .nav__bar { background: var(--canvas); }
 .nav .nav__progress { position: absolute; background: var(--accent); }
@@ -197,8 +193,6 @@ select option { background: var(--night); color: var(--canvas); }
 @media(max-width:767px) {
   .nav { height: 72px; border-radius: 12px; }
   .nav__wordmark { font-size: 1.7rem; }
-  .nav__motion { max-width: 62px; padding: .2rem; line-height: 1.2; }
-  .nav__effects { display: none; }
   .nav__bag { font-size: .8rem; }
   .nav__bag-count { margin-left: .3rem; }
   .cinematic-hero { margin-top: -96px; padding-top: 112px; min-height: 90svh; }

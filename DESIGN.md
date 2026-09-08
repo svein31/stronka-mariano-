@@ -41,7 +41,7 @@ GSAP/ScrollTrigger + Lenis own pinned story beats, scrubbed CSS perspective/tran
 Retain the existing printed cotton/linen procedural cloth as the signature 3D moment; use genuine mesh rotation and camera dolly, not just image scaling. Static photos/descriptions remain outside Canvas.
 Only animate transform/opacity. Glass highlight translates; fixed blur layers fade with their panel. No blur interpolation or layout-property tweens. Motion layout uses transform projection.
 Reduced motion / in-page pause: no pin, no parallax, no 3D, no blur, no spring; content fully visible. Low-end/coarse-pointer/save-data devices: no 3D and no backdrop blur, no pinned scene; lightweight reveal only. Default SSR is conservative.
-Full pinning, parallax and 3D are desktop-only and require explicit session opt-in until physical mid-range-device profiling is complete. Eligible desktops receive lightweight glass with a fixed 8px blur independently of this switch; reduced transparency disables that blur. Ship the useful composed path by default. Enabling cannot override reduced motion, low hardware tier or save-data; missing WebGL always prevents the cloth renderer.
+Animations start automatically without navigation switches. Desktop uses full geometry; phones start with a bounded mobile budget and unpinned scroll choreography. Sustained low frame rates reduce quality, ultimately retaining the static composition. System reduced motion, save-data and unavailable WebGL remain respected; reduced transparency disables glass blur. Off-screen and hidden-tab render loops stop.
 Real-phone performance has not been measured in this environment. Browser/device QA remains an explicit release gate; do not present SSR tests as profiling.
 
 ## Do / don't

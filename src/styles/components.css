@@ -99,12 +99,6 @@
   text-decoration: underline;
 }
 
-.nav__motion {
-  font-size: .7rem;
-  border: 0;
-  padding: .5rem;
-}
-
 .nav__bag {
   border: 0;
   padding: .7rem 0;
@@ -569,10 +563,6 @@
   }
   .nav__actions {
     gap: .5rem;
-  }
-  .nav__motion {
-    max-width: 60px;
-    line-height: 1.2;
   }
   .drawer {
     padding: 1.2rem;

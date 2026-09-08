@@ -85,27 +85,30 @@ test('Photograph probes a real URL and keeps a descriptive fallback',()=>{
  const hero=renderToStaticMarkup(h(PhotoPlate,{slot:'botanika',alt:'Bawełniane spodnie.',eager:true}))
  assert.match(hero,/srcSet=/);assert.match(hero,/loading="eager"/);assert.match(hero,/width="1086" height="1448"/)
 })
-test('Rich opt-in never bypasses hardware, data or accessibility vetoes',()=>{
- for(const tier of ['low','high']) for(const webgl of [false,true]) for(const reducedMotion of [false,true]) for(const richEffects of [false,true]) for(const saveData of [false,true]) {
-  const capabilities={tier,webgl,reducedMotion,richEffects,saveData,reducedTransparency:false}
+test('Automatic effects respect hardware, data and accessibility limits',()=>{
+ for(const tier of ['low','medium','high']) for(const webgl of [false,true]) for(const reducedMotion of [false,true]) for(const saveData of [false,true]) {
+  const capabilities={tier,webgl,reducedMotion,saveData,reducedTransparency:false}
   const budget=motionBudgetFor(capabilities),policy=visualPolicyFor(capabilities)
-  const enabled=tier==='high'&&webgl&&!reducedMotion&&richEffects&&!saveData
+  const enabled=tier!=='low'&&webgl&&!reducedMotion&&!saveData
   assert.equal(budget.enabled,enabled);assert.equal(policy.depth,enabled)
   if(!enabled)assert.equal(budget.clothSegments,0)
   if(reducedMotion||tier==='low'||saveData) for(const effect of ['depth','pin','parallax','glass','magnetic'])assert.equal(policy[effect],false,effect)
  }
  const high={tier:'high',webgl:true,reducedMotion:false}
- assert.equal(motionBudgetFor(high).enabled,false)
- assert.equal(motionBudgetFor({...high,richEffects:true}).clothSegments,96)
- assert.deepEqual(motionBudgetFor({...high,richEffects:true}).dpr,[1,1.5])
+ assert.equal(motionBudgetFor(high).enabled,true)
+ assert.equal(motionBudgetFor({...high,tier:'medium'}).clothSegments,48)
+ assert.deepEqual(motionBudgetFor({...high,tier:'medium'}).dpr,[1,1.25])
+ assert.equal(visualPolicyFor({...high,tier:'medium',saveData:false}).pin,false)
+ assert.equal(motionBudgetFor(high).clothSegments,96)
+ assert.deepEqual(motionBudgetFor(high).dpr,[1,1.5])
 })
 test('Reduced transparency and reduced motion independently control glass and interactions',()=>{
- const high={tier:'high',webgl:true,reducedMotion:false,richEffects:false,saveData:false,reducedTransparency:false}
- assert.equal(visualPolicyFor(high).glass,true);assert.equal(visualPolicyFor(high).pin,false)
- const transparent=visualPolicyFor({...high,reducedTransparency:true,richEffects:true})
+ const high={tier:'high',webgl:true,reducedMotion:false,saveData:false,reducedTransparency:false}
+ assert.equal(visualPolicyFor(high).glass,true);assert.equal(visualPolicyFor(high).pin,true)
+ const transparent=visualPolicyFor({...high,reducedTransparency:true})
  assert.equal(transparent.glass,false);assert.equal(transparent.depth,true)
  assert.equal(visualPolicyFor({...high,reducedMotion:true}).componentMotion,false)
- assert.equal(visualPolicyFor({...high,reducedMotion:true}).richAvailable,false)
+ assert.equal(visualPolicyFor({...high,reducedMotion:true}).depth,false)
 })
 test('Sorting filtered products preserves catalog order and is reflected in the URL document',()=>{
  const before=garments.map(p=>p.slug)

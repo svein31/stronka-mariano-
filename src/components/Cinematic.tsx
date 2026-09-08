@@ -10,16 +10,22 @@ export function CinematicHero() {
   const ref=useRef<HTMLElement>(null)
   const policy=useVisualPolicy()
   useGSAP(()=>{
-    if(!policy.pin || !ref.current)return
+    if(!policy.parallax || !ref.current)return
     const media=gsap.matchMedia()
     media.add('(min-width: 64rem) and (min-height: 700px)',()=>{
+      if(!policy.pin)return
       const timeline=gsap.timeline({scrollTrigger:{trigger:ref.current,start:'top top',end:'+=70%',pin:true,scrub:.65,anticipatePin:1,invalidateOnRefresh:true}})
       timeline.to('.hero-depth',{z:100,yPercent:-5,rotateX:3,ease:'none'},0)
         .to('.hero-copy',{y:-35,ease:'none'},0)
         .fromTo('.hero-chapter',{opacity:0,y:20},{opacity:1,y:0,ease:'none'},.35)
     })
+    media.add('(max-width: 63.999rem), (max-height: 699px)',()=>{
+      gsap.timeline({scrollTrigger:{trigger:ref.current,start:'top top',end:'bottom top',scrub:.5,invalidateOnRefresh:true}})
+        .fromTo('.hero-depth',{scale:1.08,yPercent:-2},{scale:1.16,yPercent:5,ease:'none'},0)
+        .to('.hero-copy',{y:-24,ease:'none'},0)
+    })
     return ()=>media.revert()
-  },{scope:ref,dependencies:[policy.pin],revertOnUpdate:true})
+  },{scope:ref,dependencies:[policy.pin,policy.parallax],revertOnUpdate:true})
   return <section className="cinematic-hero" ref={ref} aria-labelledby="route-title">
     <div className="hero-depth"><PhotoPlate slot="process" alt="Dłonie odbijające kobaltowy roślinny wzór na jasnych spodniach." eager/></div>
     <div className="hero-atmosphere" aria-hidden="true"/>
@@ -39,15 +45,21 @@ export function CraftChapter() {
   const ref=useRef<HTMLElement>(null)
   const policy=useVisualPolicy()
   useGSAP(()=>{
-    if(!policy.pin || !ref.current)return
+    if(!policy.parallax || !ref.current)return
     const media=gsap.matchMedia()
     media.add('(min-width: 64rem) and (min-height: 700px)',()=>{
+      if(!policy.pin)return
       gsap.timeline({scrollTrigger:{trigger:ref.current,start:'top top',end:'+=85%',pin:true,scrub:.6,invalidateOnRefresh:true}})
         .fromTo('.craft-depth',{z:-100,rotateY:-5},{z:40,rotateY:3,y:-30,ease:'none'},0)
         .fromTo('.craft-word',{y:40,opacity:.45},{y:0,opacity:1,stagger:.18,ease:'none'},0)
     })
+    media.add('(max-width: 63.999rem), (max-height: 699px)',()=>{
+      gsap.timeline({scrollTrigger:{trigger:ref.current,start:'top bottom',end:'bottom top',scrub:.5,invalidateOnRefresh:true}})
+        .fromTo('.craft-depth',{scale:1.1,yPercent:-4},{scale:1.16,yPercent:4,ease:'none'},0)
+      gsap.fromTo('.craft-word',{y:26,opacity:.5},{y:0,opacity:1,stagger:.12,duration:.8,ease:'power2.out',scrollTrigger:{trigger:ref.current,start:'top 65%',once:true}})
+    })
     return ()=>media.revert()
-  },{scope:ref,dependencies:[policy.pin],revertOnUpdate:true})
+  },{scope:ref,dependencies:[policy.pin,policy.parallax],revertOnUpdate:true})
   return <section id="process" className="craft-chapter" ref={ref}>
     <div className="craft-depth"><PhotoPlate slot="process" alt="Ręczny stempel z liśćmi odciskany w kobaltowym pigmencie na płótnie."/><ClothStudy/></div>
     <div className="shell craft-content"><div className="photo-copy"><p className="eyebrow">02 / Siła tkwi w szczególe</p><h2><span className="craft-word">Ten sam stempel.</span><br/><span className="craft-word">Inny nacisk.</span><br/><em className="craft-word">Twój ślad.</em></h2><p>Nie wygładzamy każdej różnicy. Ręczny nadruk żyje razem ze splotem, pigmentem i ruchem tkaniny.</p><MagneticLink to="/process">Jak powstają ↗</MagneticLink></div><p className="small chapter-note">Ilustracja procesu i opcjonalne studium 3D, nie dokumentacja gotowej kolekcji.</p></div>

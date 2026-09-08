@@ -23,15 +23,11 @@ import { detectWebGL, perfTier, useReducedMotion, type PerfTier } from './motion
 
 interface CapabilitiesValue {
   reducedMotion: boolean
-  richEffects: boolean
-  setRichEffects: (enabled:boolean)=>void
   saveData: boolean
   reducedTransparency: boolean
-  systemReducedMotion: boolean
-  motionPaused: boolean
-  setMotionPaused: (paused: boolean) => void
   webgl: boolean
   tier: PerfTier
+  reduceQuality: () => void
   scroll: ScrollApi
   /** Bumped whenever fonts or imagery settle, so ScrollTrigger re-measures. */
   refreshKey: number
@@ -49,15 +45,11 @@ const NOOP_SCROLL: ScrollApi = {
 
 const CapabilitiesContext = createContext<CapabilitiesValue>({
   reducedMotion: false,
-  richEffects: false,
-  setRichEffects: ()=>undefined,
   saveData: true,
   reducedTransparency: true,
-  systemReducedMotion: false,
-  motionPaused: false,
-  setMotionPaused: () => undefined,
   webgl: false,
   tier: 'low',
+  reduceQuality: () => undefined,
   scroll: NOOP_SCROLL,
   refreshKey: 0,
   requestRefresh: () => undefined,
@@ -87,6 +79,8 @@ export const BUDGET_HIGH: MotionBudget = {
   enabled: true,
 }
 
+export const BUDGET_MEDIUM: MotionBudget = {clothSegments: 48, threads: 48, motes: 80, dpr: [1, 1.25], enabled: true}
+
 export const BUDGET_NONE: MotionBudget = {
   clothSegments: 0,
   threads: 0,
@@ -96,8 +90,7 @@ export const BUDGET_NONE: MotionBudget = {
 }
 
 export function CapabilitiesProvider({ children }: { children: ReactNode }) {
-  const systemReducedMotion = useReducedMotion()
-  const [richEffects,setRichEffects]=useState(false)
+  const reducedMotion = useReducedMotion()
   const [saveData,setSaveData]=useState(true)
   const [reducedTransparency,setReducedTransparency]=useState(true)
   useEffect(()=>{
@@ -109,10 +102,10 @@ export function CapabilitiesProvider({ children }: { children: ReactNode }) {
     updateTransparency();query.addEventListener('change',updateTransparency)
     return()=>{connection?.removeEventListener('change',updateConnection);query.removeEventListener('change',updateTransparency)}
   },[])
-  const [motionPaused, setMotionPaused] = useState(false)
-  const reducedMotion = systemReducedMotion || motionPaused
   const [webgl, setWebgl] = useState(false)
   const [tier, setTier] = useState<PerfTier>('low')
+  // Multiple visible scenes can report in one frame; lower only one step.
+  const reduceQuality = useCallback(() => setTier(current => current !== tier ? current : current === 'high' ? 'medium' : 'low'), [tier])
   const [scroll, setScroll] = useState<ScrollApi>(NOOP_SCROLL)
   const [refreshKey, setRefreshKey] = useState(0)
   const requestRefresh = useCallback(() => setRefreshKey((key) => key + 1), [])
@@ -150,23 +143,21 @@ export function CapabilitiesProvider({ children }: { children: ReactNode }) {
     ScrollTrigger.refresh()
   }, [refreshKey, reducedMotion])
 
-  const policy=visualPolicyFor({tier,webgl,reducedMotion,richEffects,saveData,reducedTransparency})
+  const policy=visualPolicyFor({tier,webgl,reducedMotion,saveData,reducedTransparency})
   useEffect(()=>{document.documentElement.dataset.glass=policy.glass?'rich':'solid';return()=>{delete document.documentElement.dataset.glass}},[policy.glass])
 
   const value = useMemo<CapabilitiesValue>(
     () => ({
       reducedMotion,
-      richEffects,setRichEffects,saveData,reducedTransparency,
-      systemReducedMotion,
-      motionPaused,
-      setMotionPaused,
+      saveData, reducedTransparency,
       webgl,
       tier,
+      reduceQuality,
       scroll,
       refreshKey,
       requestRefresh,
     }),
-    [richEffects,saveData,reducedTransparency,reducedMotion, systemReducedMotion, motionPaused, webgl, tier, scroll, refreshKey, requestRefresh],
+    [saveData, reducedTransparency, reducedMotion, webgl, tier, reduceQuality, scroll, refreshKey, requestRefresh],
   )
 
   return <CapabilitiesContext.Provider value={value}>{children}</CapabilitiesContext.Provider>
@@ -191,8 +182,8 @@ export function useMotionBudget(): MotionBudget {
   return motionBudgetFor(useCapabilities())
 }
 
-export function motionBudgetFor({tier,webgl,reducedMotion,richEffects=false,saveData=false}: Pick<CapabilitiesValue,'tier'|'webgl'|'reducedMotion'> & Partial<Pick<CapabilitiesValue,'richEffects'|'saveData'>>):MotionBudget {
-  if(!webgl || reducedMotion || tier==='low' || !richEffects || saveData)return BUDGET_NONE
-  return BUDGET_HIGH
+export function motionBudgetFor({tier,webgl,reducedMotion,saveData=false}: Pick<CapabilitiesValue,'tier'|'webgl'|'reducedMotion'> & Partial<Pick<CapabilitiesValue,'saveData'>>):MotionBudget {
+  if(!webgl || reducedMotion || tier==='low' || saveData)return BUDGET_NONE
+  return tier === 'medium' ? BUDGET_MEDIUM : BUDGET_HIGH
 }
 export function useVisualPolicy(){return visualPolicyFor(useCapabilities())}
