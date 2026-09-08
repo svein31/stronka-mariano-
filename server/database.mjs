@@ -2,6 +2,7 @@ import { DatabaseSync } from 'node:sqlite'
 import { mkdirSync, chmodSync } from 'node:fs'
 import { dirname } from 'node:path'
 import {migrateExtensions} from './extensions.mjs'
+import {migrateService} from './migrations-service.mjs'
 export function openDatabase(path) {
   if (path !== ':memory:') mkdirSync(dirname(path),{recursive:true,mode:0o700})
   const db = new DatabaseSync(path)
@@ -25,5 +26,6 @@ INSERT INTO schema_migrations VALUES (1);
 COMMIT;`)
   }
   migrateExtensions(db)
+  migrateService(db)
   return db
 }

@@ -1,10 +1,12 @@
 # Uruchomienie funkcji Mariano
 
+Nowszy etap obsługi zamówień i konfiguracja pracowników, mediów oraz InPost: [OPERATIONS.md](OPERATIONS.md).
+
 Płatności pozostają wyłączone. Kod obsługuje katalog w bazie, szybki podgląd, asystenta rozmiaru, personalizację, panel właściciela, realizację i zdjęcia zamówień. Zewnętrzne konta nie zostały utworzone ani połączone automatycznie.
 
 ## Na własnym komputerze
 
-Node.js 24+, Git oraz npm. Przełącz na gałąź codex/workshop-management, wykonaj npm ci, a potem:
+Node.js 24+, Git oraz npm. Przełącz na gałąź main, wykonaj npm ci, a potem:
 
 ```sh
 npm run owner:setup
@@ -61,7 +63,7 @@ npm run backup:restore -- pobrana-kopia.enc var/odtworzona.sqlite
 
 Przywracanie wymaga pobranego obiektu .enc i BACKUP_KEY. Nigdy nie nadpisuje istniejącego pliku. Po weryfikacji zatrzymaj aplikację i ustaw DB_PATH na odtworzony plik. Zachowaj oryginalny DATA_KEY dla kolejki e-mail. Unieważnij stare sesje właściciela i klucze klientów po odtwarzaniu historycznej bazy, jeśli mogły zostać odwołane po dacie kopii. Zmiana hasła właściciela unieważnia stare sesje.
 
-Galeria jest ograniczona do 100 MB łącznie / 1000 plików; pojedynczy upload do 12 MB. Snapshot do 256 MB. To świadomy budżet małej pracowni; większa biblioteka wymaga osobnego storage plików i strumieniowych kopii. Zdjęcia są normalizowane do WebP bez metadanych. MP4 są przechowywane jako przesłane pliki; dodaj napisy, jeżeli film zawiera istotną mowę.
+Galeria ma domyślnie 1 GB / 10000 plików; pojedynczy upload do 12 MB. Pliki są przenoszone poza SQLite przez trwałą kolejkę. W bazie może oczekiwać do 100 MB nieprzeniesionych plików. Snapshot do 256 MB; kopie zewnętrznych mediów mają oddzielny szyfrowany manifest i obiekty. Konfiguracja i przywracanie: [OPERATIONS.md](OPERATIONS.md). Zdjęcia są normalizowane do WebP bez metadanych. MP4 są przechowywane jako przesłane pliki; dodaj napisy, jeżeli film zawiera istotną mowę.
 
 Ustaw retencję obiektów i wersjonowanie w buckecie, zgodnie z potrzebami pracowni. Kod nie usuwa zdalnych kopii. Regularnie ćwicz także pełne odtworzenie aplikacji na innym urządzeniu, wraz z prywatnymi ustawieniami; automatyczny test sprawdza bazę, nie całą infrastrukturę.
 

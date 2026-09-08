@@ -1,4 +1,57 @@
 /* Transactional tools extend the existing white product stages and dark chrome. */
+.service-state { padding:1.5rem; margin-block:1rem; border:1px solid var(--line); background:var(--ecru); color:var(--charcoal); border-radius:8px; }
+.connection-status { position:relative; z-index:2; background:var(--canvas); color:var(--charcoal); padding:1rem clamp(1rem,4vw,4rem); border-bottom:2px solid var(--line); }
+.service-state h3 { font-size:1.35rem; }
+.service-error { border-width:2px; }
+.loading-line { display:block; width:5rem; height:4px; margin-bottom:1rem; background:var(--charcoal); }
+.service-tabs,.service-actions { display:flex; flex-wrap:wrap; gap:.6rem; margin-block:1.5rem; }
+.service-tabs button[aria-pressed=true],.measure-steps button[aria-current=step] { background:var(--charcoal); color:var(--canvas); }
+.service-tabs button { min-height:44px; }
+.service-metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem; margin-block:1.5rem; }
+.service-metrics div { padding:1.25rem; background:var(--ecru); }
+.service-metrics span,.service-metrics strong { display:block; }
+.service-metrics strong { font-size:1.5rem; }
+.spec-card { border:1px solid var(--line); border-radius:8px; padding:1.5rem; margin-block:1.5rem; }
+.spec-card h3 { font-size:1.5rem; }
+.spec-amount { font-size:2rem; font-weight:bold; }
+.spec-amount small { display:block; font-size:.875rem; font-weight:normal; }
+.spec-card dl > div { display:grid; grid-template-columns:180px 1fr; gap:1rem; padding-block:.6rem; border-bottom:1px solid var(--line); }
+.spec-card dt { font-weight:bold; }
+.spec-card dd { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; }
+.status-tag { border:1px solid currentColor; padding:.2rem .65rem; font-size:.875rem; }
+.conversation { list-style:none; padding:0; max-height:600px; overflow:auto; }
+.conversation li { padding:1.25rem; margin-block:1rem; border-left:3px solid var(--charcoal); background:var(--ecru); }
+.conversation li[data-author=workshop] { background:var(--canvas); border:1px solid var(--line); border-left:3px solid var(--charcoal); }
+.conversation time { display:block; color:var(--muted); font-size:.875rem; }
+.conversation p { white-space:pre-wrap; overflow-wrap:anywhere; }
+.tracking-page form,.operations-panel form { margin-block:1.5rem; }
+.tracking-page fieldset,.operations-panel fieldset { min-width:0; border:0; padding:0; }
+.tracking-page [hidden],.admin-page [hidden] { display:none!important; }
+.tracking-summary .eyebrow { overflow-wrap:anywhere; }
+.measure-guide { max-width:1100px; }
+.measure-intro { max-width:70ch; margin-bottom:2rem; }
+.measure-intro h2,.measure-card h2,.measure-summary h2 { font-size:clamp(1.8rem,4vw,3rem); margin-bottom:1rem; }
+.measure-steps { display:grid; grid-template-columns:repeat(3,1fr); gap:.75rem; margin-block:2rem; }
+.measure-steps button { text-align:left; padding:1rem; }
+.measure-steps span { display:block; font-size:1.6rem; }
+.measure-card { padding:clamp(1.25rem,4vw,3rem); border:1px solid var(--line); background:var(--ecru); }
+.measure-card .field { max-width:260px; font-size:1rem; }
+.measure-summary { padding-block:2rem; }
+.measure-summary dl { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-block:1rem; }
+.measure-summary dd { font-size:1.5rem; font-weight:bold; margin:0; }
+.production-calendar { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem; margin-block:2rem; }
+.day-card { border:1px solid var(--line); padding:1rem; }
+.day-card meter { width:100%; }
+.operations-panel { overflow-wrap:anywhere; }
+.operations-panel h3 { font-size:1.7rem; margin-block:1.5rem 1rem; }
+.operations-panel table { min-width:500px; }
+@media(max-width:600px) {
+ .measure-steps,.measure-summary dl { grid-template-columns:1fr; }
+ .measure-steps button { display:flex; align-items:center; gap:1rem; }
+ .spec-card dl > div { grid-template-columns:1fr; gap:.2rem; }
+ .spec-card { padding:1rem; }
+ .service-tabs button { flex:1 1 140px; }
+}
 .quick-trigger { width:100%; margin-top:1rem; color:var(--charcoal); border-color:var(--line); min-height:44px; }
 .quick-dialog { position:fixed; width:min(1100px,calc(100% - 2rem)); max-height:calc(100svh - 2rem); margin:auto; padding:1.5rem; border-radius:18px; overflow:auto; }
 .quick-dialog::backdrop { background:rgba(12,13,16,.8); }
@@ -57,4 +110,3 @@
  .media-editor img { max-width:180px; }
  .tracking-summary h2 { font-size:2rem; }
 }
-

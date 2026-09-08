@@ -9,8 +9,9 @@ import {Home,Collection,Product,Atelier,Journal,JournalArticle,CartPage,FAQ,Size
 import {Checkout,OrderConfirmation} from './routes/Checkout'
 import {Tracking,Personalization,NewsletterAction} from './routes/Workshop'
 import {Admin} from './routes/Admin'
+import {ConnectionStatus} from './components/ConnectionStatus'
 export function App() {
- return <><div id="site-content"><Nav/><main id="main-content"><Routes>
+ return <><div id="site-content"><Nav/><main id="main-content"><ConnectionStatus/><Routes>
  <Route path="/" element={<Home/>}/><Route path="/shop" element={<Collection/>}/><Route path="/collection" element={<Collection/>}/><Route path="/shop/:slug" element={<Product/>}/><Route path="/collection/:slug" element={<Product/>}/>
  <Route path="/admin" element={<Admin/>}/><Route path="/track" element={<Tracking/>}/><Route path="/personalize/:slug" element={<Personalization/>}/><Route path="/newsletter" element={<NewsletterAction/>}/>
  <Route path="/process" element={<Atelier/>}/><Route path="/atelier" element={<Atelier/>}/><Route path="/journal" element={<Journal/>}/><Route path="/journal/:slug" element={<JournalArticle/>}/>

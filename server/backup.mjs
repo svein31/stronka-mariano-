@@ -5,6 +5,23 @@ import {tmpdir} from 'node:os'
 import {randomUUID} from 'node:crypto'
 import {S3Client,PutObjectCommand,GetObjectCommand} from '@aws-sdk/client-s3'
 import {encrypt,decrypt,digest} from './security.mjs'
+import {assetData,mediaStore} from './media-store.mjs'
+export async function backupMedia(db,env,storage){
+ const files=[]
+ // Assets are immutable and addressed by ID. Separate encrypted objects are reused
+ // between snapshots, keeping each request bounded to one upload (12 MB maximum).
+ for(const row of db.prepare('SELECT * FROM assets WHERE storage_key IS NOT NULL').all()){
+  for(const [mediaKey,thumbnail] of [[row.storage_key,false],...(row.thumbnail_key?[[row.thumbnail_key,true]]:[])]){
+   const bytes=Buffer.from((await assetData(row,env,thumbnail)).bytes),checksum=digest(bytes)
+   const key='mariano/media/'+digest(env.BACKUP_KEY).slice(0,16)+'/'+checksum+'.enc'
+   let valid=false
+   try{const remote=await storage.send(new GetObjectCommand({Bucket:env.BACKUP_BUCKET,Key:key}),{abortSignal:AbortSignal.timeout(30000)});valid=digest(decrypt(Buffer.from(await remote.Body.transformToByteArray()),env.BACKUP_KEY))===checksum}catch{}
+   if(!valid){await storage.send(new PutObjectCommand({Bucket:env.BACKUP_BUCKET,Key:key,Body:encrypt(bytes,env.BACKUP_KEY),ContentType:'application/octet-stream'}),{abortSignal:AbortSignal.timeout(30000)});const remote=await storage.send(new GetObjectCommand({Bucket:env.BACKUP_BUCKET,Key:key}),{abortSignal:AbortSignal.timeout(30000)});if(digest(decrypt(Buffer.from(await remote.Body.transformToByteArray()),env.BACKUP_KEY))!==checksum)throw Error('Media backup verification failed')}
+   files.push({mediaKey,key,checksum,mime:thumbnail?'image/webp':row.mime})
+  }
+ }
+ return files
+}
 function checkArchive(bytes,key,expected){
  const plain=decrypt(bytes,key)
  if(expected&&digest(plain)!==expected)throw Error('Restored bytes differ from snapshot')
@@ -28,6 +45,15 @@ export async function runBackup(db,env=process.env,client){
   const plain=await readFile(snapshot),checksum=digest(plain),encrypted=encrypt(plain,env.BACKUP_KEY)
   const storage=client||new S3Client({region:env.BACKUP_REGION||'auto',endpoint:env.BACKUP_ENDPOINT||undefined,forcePathStyle:env.BACKUP_PATH_STYLE==='true',maxAttempts:3})
   const key='mariano/'+new Date().toISOString().replace(/[:.]/g,'-')+'-'+randomUUID()+'.enc'
+  const snapshotDb=new DatabaseSync(snapshot,{readOnly:true})
+  let files
+  try{files=await backupMedia(snapshotDb,env,storage)}finally{snapshotDb.close()}
+  if(files.length){
+   const manifest=encrypt(JSON.stringify(files),env.BACKUP_KEY)
+   await storage.send(new PutObjectCommand({Bucket:env.BACKUP_BUCKET,Key:key+'.media.enc',Body:manifest,ContentType:'application/octet-stream'}),{abortSignal:AbortSignal.timeout(30000)})
+   const remote=await storage.send(new GetObjectCommand({Bucket:env.BACKUP_BUCKET,Key:key+'.media.enc'}),{abortSignal:AbortSignal.timeout(30000)})
+   if(digest(decrypt(Buffer.from(await remote.Body.transformToByteArray()),env.BACKUP_KEY))!==digest(JSON.stringify(files)))throw Error('Media manifest verification failed')
+  }
   await storage.send(new PutObjectCommand({Bucket:env.BACKUP_BUCKET,Key:key,Body:encrypted,ContentType:'application/octet-stream'}),{abortSignal:AbortSignal.timeout(30000)})
   // Test the downloaded remote object, not just the local encrypted buffer.
   const object=await storage.send(new GetObjectCommand({Bucket:env.BACKUP_BUCKET,Key:key}),{abortSignal:AbortSignal.timeout(30000)})
@@ -35,9 +61,26 @@ export async function runBackup(db,env=process.env,client){
   const restored=join(directory,'restored.sqlite')
   await writeFile(restored,checkArchive(downloaded,env.BACKUP_KEY,checksum),{mode:0o600})
   const counts=await verifyDatabase(restored)
-  db.prepare('INSERT INTO operations VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run('backup_verified',JSON.stringify({at:new Date().toISOString(),key,counts}))
-  return {key,counts}
+  db.prepare('INSERT INTO operations VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run('backup_verified',JSON.stringify({at:new Date().toISOString(),key,counts,media:files.length}))
+  return {key,counts,media:files.length}
  }finally{await rm(directory,{recursive:true,force:true})}
+}
+export async function restoreMedia(manifestPath,env=process.env,storage){
+ const files=JSON.parse(decrypt(await readFile(manifestPath),env.BACKUP_KEY).toString())
+ if(!Array.isArray(files)||files.length>20000)throw Error('Invalid media manifest')
+ const s3=storage||new S3Client({region:env.BACKUP_REGION||'auto',endpoint:env.BACKUP_ENDPOINT||undefined,forcePathStyle:env.BACKUP_PATH_STYLE==='true'})
+ const target=mediaStore(env)
+ for(const file of files){
+  if(!/^mariano\/media\/[a-f0-9]{16}\/[a-f0-9]{64}\.enc$/.test(file.key)||!/^media\/[a-f0-9-]+(?:-thumb)?\.(webp|mp4)$/.test(file.mediaKey))throw Error('Invalid media manifest path')
+  const object=await s3.send(new GetObjectCommand({Bucket:env.BACKUP_BUCKET,Key:file.key}),{abortSignal:AbortSignal.timeout(30000)})
+  const bytes=decrypt(Buffer.from(await object.Body.transformToByteArray()),env.BACKUP_KEY)
+  if(digest(bytes)!==file.checksum)throw Error('Invalid media checksum')
+  let existing;try{existing=await target.get(file.mediaKey)}catch(e){if(e.code!=='ENOENT'&&e.name!=='NoSuchKey'&&e.$metadata?.httpStatusCode!==404)throw e}
+  if(existing){if(digest(existing)!==file.checksum)throw Error('Refusing to overwrite different media');continue}
+  await target.put(file.mediaKey,bytes,file.mime)
+  if(digest(await target.get(file.mediaKey))!==file.checksum)throw Error('Media restore verification failed')
+ }
+ return {files:files.length}
 }
 export async function restoreBackup(archive,destination,key){
  const target=resolve(destination),bytes=await readFile(archive)

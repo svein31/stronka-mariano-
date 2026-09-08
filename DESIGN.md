@@ -46,6 +46,7 @@ Real-phone performance has not been measured in this environment. Browser/device
 
 ## Do / don't
 ## Workshop tools extension
+The measurement guide uses three numbered steps with full instructions, native numeric fields and a persistent local summary. The order center uses opaque surfaces, wrapping section navigation, dated messages, explicit quote states and actual recorded production events. Empty, loading, failed and saving states remain readable without animation. Keep last loaded data during refresh; clear private content when access expires. Production calendars express capacity in minutes with text as well as meters. No new decorative 3D or glass effects on operational forms.
 Quick view uses a glass dialog with opaque product photography, native size/variant controls, Escape and focus restoration. Only one shopping overlay opens at a time. Size guidance uses a model's owner-approved measurements; unverified fixtures never produce a recommendation. Personalization is a separate quotation request, not a priced cart item. Tracking and owner tools use solid, readable surfaces and no decorative route transitions. Timeline shows recorded events, an explicit unknown ETA and no fabricated progress photographs. Owner screens expose editing and order actions immediately, with labelled fields and save/error states.
 
 Do alternate dark story and white products, expose process immediately, keep one accent, genuine product detail, visible focus and dimensions.

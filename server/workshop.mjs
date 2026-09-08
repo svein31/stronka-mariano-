@@ -4,6 +4,7 @@ import {HttpError,textField,emailField,readOrder} from './commerce.mjs'
 import {listProducts} from './catalog.mjs'
 import {digest} from './security.mjs'
 import {notifyOrder,newsletterMail} from './mail.mjs'
+import {enqueueJob} from './jobs.mjs'
 export const STAGES=['received','confirmed','cutting','sewing','printing','ready','shipped','cancelled']
 export function canTrack(db,id,secret){
  if(typeof secret!=='string'||!/^[a-f0-9]{64}$/.test(secret))throw new HttpError(404,'Dostęp wygasł lub jest nieprawidłowy.')
@@ -32,18 +33,22 @@ export function updateProgress(db,id,body,env){
  try{
   db.prepare('UPDATE orders SET stage=?,estimated_date=?,revision=revision+1,status=? WHERE id=?').run(body.stage,eta,body.stage==='cancelled'?'cancelled':body.stage==='received'?'awaiting_arrangement':'confirmed',id)
   db.prepare('INSERT INTO order_events VALUES(?,?,?,?,?,?)').run(eventId,id,new Date().toISOString(),body.stage,note,JSON.stringify(body.photos))
+  if(body.stage==='cancelled'){
+   db.prepare("UPDATE reservations SET state='released' WHERE order_id=? AND state='reserved'").run(id)
+   db.prepare("UPDATE production_tasks SET status='cancelled',revision=revision+1 WHERE order_id=? AND status='planned'").run(id)
+  }
   notifyOrder(db,env,id,body.stage==='shipped'?'Twoja para została wysłana':'Aktualizacja realizacji zamówienia','event:'+eventId)
   db.exec('COMMIT')
  }catch(e){db.exec('ROLLBACK');throw e}
  return {saved:true}
 }
-export async function saveAsset(db,body){
+export async function saveAsset(db,body,env={}){
  if(typeof body.data!=='string'||body.data.length>18000000||!/^[A-Za-z0-9+/]*={0,2}$/.test(body.data))throw new HttpError(400,'Nieprawidłowy plik (maksymalnie 12 MB).')
  const bytes=Buffer.from(body.data,'base64')
  if(!bytes.length||bytes.length>12*1024*1024)throw new HttpError(400,'Plik jest za duży.')
  const order=body.orderId||null
  if(order&&!db.prepare('SELECT 1 FROM orders WHERE id=?').get(order))throw new HttpError(404,'Brak zamówienia.')
- if(db.prepare('SELECT count(*) AS n FROM assets').get().n>=1000)throw new HttpError(409,'Osiągnięto limit galerii. Skontaktuj się z administratorem.')
+ if(db.prepare('SELECT count(*) AS n FROM assets').get().n>=10000)throw new HttpError(409,'Osiągnięto limit galerii. Skontaktuj się z administratorem.')
  let output,mime,extension
  if(body.mime==='video/mp4'){
   if(order||bytes.subarray(4,8).toString()!=='ftyp')throw new HttpError(400,'Wymagany prawidłowy film MP4 produktu.')
@@ -54,8 +59,10 @@ export async function saveAsset(db,body){
   mime='image/webp';extension='webp'
  }
  const id=randomUUID()
- if(db.prepare('SELECT COALESCE(SUM(length(bytes)),0) AS size FROM assets').get().size+output.length>100*1024*1024)throw new HttpError(409,'Galeria przekroczyła 100 MB. Zwiększ przestrzeń przed kolejnym uploadem.')
- db.prepare('INSERT INTO assets VALUES(?,?,?,?,?)').run(id,mime,output,order,new Date().toISOString())
+ if(db.prepare('SELECT COALESCE(SUM(byte_size),0) AS size FROM assets').get().size+output.length>Number(env.MEDIA_QUOTA_MB||1024)*1024*1024)throw new HttpError(409,'Osiągnięto limit miejsca na media.')
+ if(db.prepare('SELECT COALESCE(SUM(length(bytes)),0) AS size FROM assets').get().size+output.length>100*1024*1024)throw new HttpError(503,'Przetwarzanie zdjęć jest opóźnione. Spróbuj po uruchomieniu kolejki.')
+ db.exec('BEGIN IMMEDIATE')
+ try{db.prepare('INSERT INTO assets(id,mime,bytes,order_id,created_at,byte_size) VALUES(?,?,?,?,?,?)').run(id,mime,output,order,new Date().toISOString(),output.length);enqueueJob(db,'media_store','media:'+id,{id});db.exec('COMMIT')}catch(e){db.exec('ROLLBACK');throw e}
  return {id,src:order?null:'/media/uploads/'+id+'.'+extension,mime}
 }
 export function personalize(db,body){

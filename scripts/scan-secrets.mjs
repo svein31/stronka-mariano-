@@ -2,7 +2,7 @@ import {execFileSync} from 'node:child_process'
 import {readFileSync} from 'node:fs'
 const files=execFileSync('git',['ls-files','-z'],{encoding:'utf8'}).split('\0').filter(Boolean)
 let failed=false
-const patterns=[/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/,/AKIA[0-9A-Z]{16}/,/gh[pousr]_[A-Za-z0-9]{30,}/,/(?:ADMIN_PASSWORD_HASH|ADMIN_TOTP_SECRET|DATA_KEY|BACKUP_KEY|SMTP_PASS|AWS_SECRET_ACCESS_KEY)[ \t]*=[ \t]*["']?[A-Za-z0-9/+_:=-]{16,}/]
+const patterns=[/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/,/AKIA[0-9A-Z]{16}/,/gh[pousr]_[A-Za-z0-9]{30,}/,/(?:ADMIN_PASSWORD_HASH|ADMIN_TOTP_SECRET|DATA_KEY|BACKUP_KEY|SMTP_PASS|AWS_SECRET_ACCESS_KEY|MEDIA_SECRET_ACCESS_KEY|INPOST_TOKEN)[ \t]*=[ \t]*["']?[A-Za-z0-9/+_:=-]{16,}/]
 for(const path of files){
  if(path==='scripts/scan-secrets.mjs')continue
  if(/(^|\/)\.env($|\.)/.test(path)&&!path.endsWith('.env.example')){console.error('Private environment file tracked: '+path);failed=true;continue}

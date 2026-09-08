@@ -9,6 +9,9 @@ import {listProducts} from './catalog.mjs'
 import {clientIP,limit,digest,audit} from './security.mjs'
 import {workshopRoutes,serveAsset} from './routes-workshop.mjs'
 import {newsletterMail} from './mail.mjs'
+import {serviceRoutes} from './routes-service.mjs'
+import {assetData} from './media-store.mjs'
+import {openApi} from './openapi.mjs'
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.webp':'image/webp','.jpg':'image/jpeg','.png':'image/png','.ico':'image/x-icon','.woff2':'font/woff2'}
 async function bodyOf(req,max=32768) {
   if (!req.headers['content-type']?.startsWith('application/json')) throw new HttpError(415,'Wymagany format JSON.')
@@ -29,8 +32,10 @@ export function createApp({db,config,dist=resolve('dist'),rateLimit=120,env=proc
     res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'")
     try {
       const url=new URL(req.url,'http://localhost')
+      const versioned=url.pathname.startsWith('/api/v1/')
+      if(versioned){url.pathname=url.pathname.replace('/api/v1/','/api/');res.setHeader('API-Version','1')}
       const publicAsset=url.pathname.match(/^\/media\/uploads\/([a-f0-9-]+)\.(webp|mp4)$/)
-      if(publicAsset&&['GET','HEAD'].includes(req.method)){const row=db.prepare('SELECT * FROM assets WHERE id=? AND order_id IS NULL').get(publicAsset[1]);if(!row)throw new HttpError(404,'Brak pliku.');serveAsset(req,res,row);return}
+      if(publicAsset&&['GET','HEAD'].includes(req.method)){const row=db.prepare('SELECT * FROM assets WHERE id=? AND order_id IS NULL').get(publicAsset[1]);if(!row)throw new HttpError(404,'Brak pliku.');serveAsset(req,res,await assetData(row,env,url.searchParams.get('size')==='thumb'));return}
       if (url.pathname.startsWith('/api/')) {
         const ip=digest(clientIP(req,env))
         limit(db,'api:'+ip,rateLimit)
@@ -40,6 +45,8 @@ export function createApp({db,config,dist=resolve('dist'),rateLimit=120,env=proc
           const restricted={'/api/admin/login':8,'/api/orders':10,'/api/contact':5,'/api/newsletter':5,'/api/tracking-access':5,'/api/personalizations':5}
           if(restricted[url.pathname])limit(db,url.pathname+':'+ip,restricted[url.pathname],600000)
         }
+        if(url.pathname==='/api/openapi.json'&&req.method==='GET')return json(res,200,openApi)
+        if(await serviceRoutes({db,env,config,req,res,url,json,bodyOf,requestId}))return
         if(await workshopRoutes({db,env,config,req,res,url,json,bodyOf,requestId}))return
         if(req.method==='GET' && url.pathname==='/api/health'){db.prepare('SELECT 1').get();return json(res,200,{ok:true})}
         if(req.method==='GET' && url.pathname==='/api/catalog') return json(res,200,{...config,emailEnabled:Boolean(env.SMTP_HOST&&env.SMTP_USER&&env.SMTP_PASS&&env.MAIL_FROM&&env.DATA_KEY),products:listProducts(db),shipping:commerce.shipping})
@@ -88,7 +95,7 @@ export function createApp({db,config,dist=resolve('dist'),rateLimit=120,env=proc
       if(status===429){res.setHeader('Retry-After','600');audit(db,'rate_limited',requestId)}
       if(status>=500)audit(db,'server_error',requestId,String(status))
       if(res.headersSent) {res.end();return}
-      json(res,error instanceof HttpError?error.status:500,{error:error instanceof HttpError?error.message:'Nie udało się zapisać danych. Spróbuj ponownie.',fields:error instanceof HttpError?error.fields:{}})
+      json(res,status,{error:error instanceof HttpError?error.message:'Nie udało się wykonać operacji. Spróbuj ponownie.',code:({400:'validation_error',401:'authentication_required',403:'forbidden',404:'not_found',409:'conflict',413:'payload_too_large',429:'rate_limited',502:'upstream_error',503:'unavailable'})[status]||'server_error',requestId,fields:error instanceof HttpError?error.fields:{}})
     }
   })
 }

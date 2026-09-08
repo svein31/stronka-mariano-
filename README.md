@@ -2,6 +2,8 @@
 
 React 19 + TypeScript + Vite storefront, GSAP/Lenis choreography and optional Three.js fabric studies. A Node 24 + SQLite backend stores orders, contact messages and newsletter requests. **Payments are disabled.**
 
+Read [OPERATIONS.md](OPERATIONS.md) for the order service center, production planning, inventory, staff, media and carrier setup. [API.md](API.md) documents versioned endpoints.
+
 Read [INTEGRATIONS.md](INTEGRATIONS.md) for the new owner panel, SMTP, backups, HTTPS and setup checklist. Private account credentials must be configured on the computer/server running the app; they are not shipped through GitHub.
 
 The placeholder brand name lives in `shared/brand.json`. SQLite is the authoritative editable product catalog; shared/catalog.json seeds new databases and supplies a static demonstration fallback. Shipping data remains shared. All current products, prices, sizing and generated photographs are demonstrative and need approval before public sales.
@@ -13,7 +15,7 @@ Install Node.js 24 or later and Git. Open Terminal / PowerShell, then:
 ```sh
 git clone https://github.com/svein31/stronka-mariano-.git
 cd stronka-mariano-
-git switch codex/workshop-management
+git switch main
 npm ci
 npm run owner:setup
 npm run dev

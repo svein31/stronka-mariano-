@@ -52,6 +52,11 @@ export function audit(db,event,requestId='',detail=''){
  console.info(JSON.stringify({event,requestId,detail:detail.slice(0,120)}))
 }
 export async function login(db,body,env=process.env){
+ const staff=typeof body.email==='string'&&db.prepare('SELECT * FROM staff WHERE email=? AND active=1').get(body.email.toLowerCase())
+ const actor=staff?.id||'owner'
+ const identity=staff?{ADMIN_EMAIL:staff.email,ADMIN_PASSWORD_HASH:staff.password_hash,ADMIN_TOTP_SECRET:staff.totp_secret}:env
+ const role=staff?.role||'owner'
+ env={...env,...identity}
  if(!env.ADMIN_EMAIL||!env.ADMIN_PASSWORD_HASH)throw new HttpError(503,'Panel wymaga konfiguracji właściciela.')
  if(env.STORE_MODE==='live'&&!env.ADMIN_TOTP_SECRET)throw new HttpError(503,'Włącz drugi składnik logowania.')
  if(activePasswordChecks>=2)throw new HttpError(503,'Logowanie zajęte. Spróbuj za chwilę.')
@@ -64,20 +69,24 @@ export async function login(db,body,env=process.env){
   const result=await verify({secret:env.ADMIN_TOTP_SECRET,token:body.otp,epochTolerance:0})
   if(!result.valid)throw new HttpError(401,'Nieprawidłowy kod.')
   const step=Math.floor(Date.now()/30000)
-  if(db.prepare('SELECT 1 FROM otp_used WHERE step=?').get(step))throw new HttpError(401,'Kod został już użyty. Poczekaj na następny.')
-  db.prepare('INSERT INTO otp_used VALUES(?)').run(step);db.prepare('DELETE FROM otp_used WHERE step<?').run(step-2)
+  if(db.prepare('SELECT 1 FROM staff_otp WHERE actor_id=? AND step=?').get(actor,step))throw new HttpError(401,'Kod został już użyty. Poczekaj na następny.')
+  db.prepare('INSERT INTO staff_otp VALUES(?,?)').run(actor,step);db.prepare('DELETE FROM staff_otp WHERE step<?').run(step-2)
  }
  const secret=token(),csrf=token(),now=Date.now()
  db.prepare('DELETE FROM admin_sessions WHERE expires<? OR touched<?').run(now,now-1800000)
- db.prepare('INSERT INTO admin_sessions VALUES(?,?,?,?,?)').run(digest(secret),csrf,now+8*3600000,now,digest((env.ADMIN_PASSWORD_HASH||'')+(env.ADMIN_TOTP_SECRET||'')))
- return {secret,csrf}
+ db.prepare('INSERT INTO admin_sessions(hash,csrf,expires,touched,credential_hash,actor_id) VALUES(?,?,?,?,?,?)').run(digest(secret),csrf,now+8*3600000,now,digest((env.ADMIN_PASSWORD_HASH||'')+(env.ADMIN_TOTP_SECRET||'')),actor)
+ return {secret,csrf,role,actorId:actor}
 }
 export function owner(db,req,write=false,env=process.env){
  const secret=req.headers.cookie?.split(';').map(s=>s.trim()).find(s=>s.startsWith('mariano_owner='))?.slice(14)
  const row=secret&&db.prepare('SELECT * FROM admin_sessions WHERE hash=?').get(digest(secret))
+ const staff=row?.actor_id!=='owner'&&row&&db.prepare('SELECT * FROM staff WHERE id=? AND active=1').get(row.actor_id)
+ if(row?.actor_id!=='owner'&&row&&!staff)throw new HttpError(401,'Konto jest nieaktywne.')
+ if(staff)env={...env,ADMIN_PASSWORD_HASH:staff.password_hash,ADMIN_TOTP_SECRET:staff.totp_secret}
  if(!row||row.expires<Date.now()||row.touched<Date.now()-1800000||row.credential_hash!==digest((env.ADMIN_PASSWORD_HASH||'')+(env.ADMIN_TOTP_SECRET||'')))throw new HttpError(401,'Zaloguj się ponownie.')
  if(write&&req.headers['x-csrf-token']!==row.csrf)throw new HttpError(403,'Odśwież panel i ponów działanie.')
  db.prepare('UPDATE admin_sessions SET touched=? WHERE hash=?').run(Date.now(),row.hash)
- return row
+ return {...row,role:staff?.role||'owner'}
 }
-export const sessionCookie=(secret,secure,logout=false)=>'mariano_owner='+secret+'; HttpOnly; SameSite=Strict; Path=/api/admin; Max-Age='+(logout?0:28800)+(secure?'; Secure':'')
+export const sessionCookie=(secret,secure,logout=false)=>'mariano_owner='+secret+'; HttpOnly; SameSite=Strict; Path=/api; Max-Age='+(logout?0:28800)+(secure?'; Secure':'')
+export function permit(session,roles){if(!roles.includes(session.role))throw new HttpError(403,'Twoja rola nie ma dostępu do tej operacji.')}

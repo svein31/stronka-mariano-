@@ -15,8 +15,11 @@
     "test": "node --test scripts/*.test.mjs",
     "orders": "node --env-file-if-exists=.env scripts/orders.mjs",
     "owner:setup": "node scripts/owner-setup.mjs",
+    "staff:setup": "node --env-file-if-exists=.env scripts/staff-setup.mjs",
+    "worker": "node --env-file-if-exists=.env scripts/worker.mjs",
     "backup": "node --env-file-if-exists=.env scripts/backup.mjs",
     "backup:restore": "node --env-file-if-exists=.env scripts/backup.mjs restore",
+    "backup:restore-media": "node --env-file-if-exists=.env scripts/restore-media.mjs",
     "scan:secrets": "node scripts/scan-secrets.mjs"
   },
   "dependencies": {

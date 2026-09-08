@@ -1,7 +1,9 @@
 import {randomUUID} from 'node:crypto'
 import {HttpError,emailField,textField} from './commerce.mjs'
 import {listProducts,saveProduct} from './catalog.mjs'
-import {owner,login,sessionCookie,limit,digest,audit} from './security.mjs'
+import {owner,login,sessionCookie,limit,digest,audit,permit} from './security.mjs'
+import {history} from './service.mjs'
+import {assetData} from './media-store.mjs'
 import {tracking,canTrack,updateProgress,saveAsset,personalize,newsletterAction} from './workshop.mjs'
 import {notifyOrder,enqueueMail} from './mail.mjs'
 export function serveAsset(req,res,row){
@@ -22,25 +24,32 @@ export async function workshopRoutes({db,env,config,req,res,url,json,bodyOf,requ
    limit(db,'login-account:'+digest(String(body.email||'').toLowerCase()),8,15*60000)
    try{
     const result=await login(db,body,env)
-    res.setHeader('Set-Cookie',sessionCookie(result.secret,config.origin.startsWith('https:')))
+    res.setHeader('Set-Cookie',[sessionCookie(result.secret,config.origin.startsWith('https:')),sessionCookie('',config.origin.startsWith('https:'),true).replace('Path=/api;','Path=/api/admin;')])
     audit(db,'owner_login',requestId)
-    json(res,200,{csrf:result.csrf});return true
+    json(res,200,{csrf:result.csrf,role:result.role,actorId:result.actorId});return true
    }catch(e){audit(db,'owner_login_failed',requestId);throw e}
   }
   const session=owner(db,req,write,env)
-  if(path==='/api/admin/session'&&req.method==='GET'){json(res,200,{csrf:session.csrf});return true}
-  if(path==='/api/admin/logout'&&write){db.prepare('DELETE FROM admin_sessions WHERE hash=?').run(session.hash);res.setHeader('Set-Cookie',sessionCookie('',config.origin.startsWith('https:'),true));json(res,200,{ok:true});return true}
+  if(path==='/api/admin/session'&&req.method==='GET'){json(res,200,{csrf:session.csrf,role:session.role,actorId:session.actor_id});return true}
+  if(path==='/api/admin/logout'&&write){db.prepare('DELETE FROM admin_sessions WHERE hash=?').run(session.hash);res.setHeader('Set-Cookie',[sessionCookie('',config.origin.startsWith('https:'),true),sessionCookie('',config.origin.startsWith('https:'),true).replace('Path=/api;','Path=/api/admin;')]);json(res,200,{ok:true});return true}
   if(path==='/api/admin/dashboard'&&req.method==='GET'){
    const orders=db.prepare('SELECT id,created_at,stage,estimated_date,amount,customer,revision FROM orders ORDER BY created_at DESC LIMIT 100').all().map(o=>({...o,customer:JSON.parse(o.customer),events:db.prepare('SELECT * FROM order_events WHERE order_id=? ORDER BY created_at DESC').all(o.id).map(e=>({...e,photos:JSON.parse(e.photos)}))}))
-   json(res,200,{products:listProducts(db),orders,custom:db.prepare('SELECT * FROM custom_requests ORDER BY created_at DESC LIMIT 100').all().map(r=>({...r,details:JSON.parse(r.details)})),audit:db.prepare('SELECT * FROM audit_events ORDER BY id DESC LIMIT 30').all(),mail:db.prepare('SELECT status,count(*) AS count FROM mail_outbox GROUP BY status').all(),operations:db.prepare('SELECT * FROM operations').all(),integrations:{email:Boolean(env.SMTP_HOST&&env.SMTP_USER&&env.SMTP_PASS&&env.MAIL_FROM&&env.DATA_KEY),backup:Boolean(env.BACKUP_BUCKET&&env.BACKUP_KEY&&env.AWS_ACCESS_KEY_ID&&env.AWS_SECRET_ACCESS_KEY),mfa:Boolean(env.ADMIN_TOTP_SECRET),alerts:Boolean(env.ALERT_WEBHOOK_URL)}});return true
+   const ownerRole=session.role==='owner',production=session.role==='production'
+   json(res,200,{role:session.role,products:ownerRole?listProducts(db):[],orders:production?orders.map(o=>({...o,customer:{name:'Zamówienie '+o.id.slice(0,8)}})):orders,custom:production?[]:db.prepare('SELECT * FROM custom_requests ORDER BY created_at DESC LIMIT 100').all().map(r=>({...r,details:JSON.parse(r.details)})),audit:ownerRole?db.prepare('SELECT * FROM audit_events ORDER BY id DESC LIMIT 30').all():[],mail:ownerRole?db.prepare('SELECT status,count(*) AS count FROM mail_outbox GROUP BY status').all():[],operations:ownerRole?db.prepare('SELECT * FROM operations').all():[],integrations:ownerRole?{email:Boolean(env.SMTP_HOST&&env.SMTP_USER&&env.SMTP_PASS&&env.MAIL_FROM&&env.DATA_KEY),backup:Boolean(env.BACKUP_BUCKET&&env.BACKUP_KEY&&env.AWS_ACCESS_KEY_ID&&env.AWS_SECRET_ACCESS_KEY),mfa:Boolean(env.ADMIN_TOTP_SECRET),alerts:Boolean(env.ALERT_WEBHOOK_URL)}:{}});return true
   }
   const asset=path.match(/^\/api\/admin\/assets\/([a-f0-9-]+)$/)
-  if(asset&&req.method==='GET'){const row=db.prepare('SELECT * FROM assets WHERE id=?').get(asset[1]);if(!row)throw new HttpError(404,'Brak pliku.');serveAsset(req,res,row);return true}
+  if(asset&&req.method==='GET'){const row=db.prepare('SELECT * FROM assets WHERE id=?').get(asset[1]);if(!row)throw new HttpError(404,'Brak pliku.');serveAsset(req,res,await assetData(row,env));return true}
   if(!write)throw new HttpError(404,'Brak endpointu.')
   const body=await bodyOf(req,path==='/api/admin/uploads'?18*1024*1024:65536)
+  if(/\/products\/|\/mail\//.test(path))permit(session,['owner'])
+  else if(path==='/api/admin/uploads')permit(session,body.orderId?['owner','production']:['owner'])
+  else if(path.endsWith('/progress')){permit(session,['owner','production']);if(session.role==='production'&&body.stage==='cancelled')throw new HttpError(403,'Anulowanie wymaga właściciela.')}
+  else permit(session,['owner','support'])
+  const originalJson=json
+  json=(response,status,value)=>{if(status<300)history(db,session.actor_id,'admin_write',path.slice('/api/admin/'.length));originalJson(response,status,value)}
   const product=path.match(/^\/api\/admin\/products\/([a-z0-9-]+)$/)
   if(product){const result=saveProduct(db,product[1],body);audit(db,'product_updated',requestId,product[1]);json(res,200,result);return true}
-  if(path==='/api/admin/uploads'){json(res,201,await saveAsset(db,body));return true}
+  if(path==='/api/admin/uploads'){json(res,201,await saveAsset(db,body,env));return true}
   if(path==='/api/admin/mail/retry'){db.prepare("UPDATE mail_outbox SET status='pending',attempts=0,available=? WHERE status='failed'").run(Date.now());audit(db,'mail_retry',requestId);json(res,200,{ok:true});return true}
   const progress=path.match(/^\/api\/admin\/orders\/([a-f0-9-]+)\/progress$/)
   if(progress){const result=updateProgress(db,progress[1],body,env);audit(db,'order_updated',requestId,progress[1]);json(res,200,result);return true}
@@ -67,7 +76,7 @@ export async function workshopRoutes({db,env,config,req,res,url,json,bodyOf,requ
  const privateAsset=path.match(/^\/api\/tracking\/([a-f0-9-]+)\/photos\/([a-f0-9-]+)$/)
  if(privateAsset&&req.method==='GET'){
   canTrack(db,privateAsset[1],req.headers.authorization?.replace(/^Bearer /,''))
-  const row=db.prepare('SELECT * FROM assets WHERE id=? AND order_id=?').get(privateAsset[2],privateAsset[1]);if(!row)throw new HttpError(404,'Brak zdjęcia.');serveAsset(req,res,row);return true
+  const row=db.prepare('SELECT * FROM assets WHERE id=? AND order_id=?').get(privateAsset[2],privateAsset[1]);if(!row)throw new HttpError(404,'Brak zdjęcia.');serveAsset(req,res,await assetData(row,env));return true
  }
  if(write&&path==='/api/tracking-access'){
   const body=await bodyOf(req),email=emailField(body.email)

@@ -28,8 +28,8 @@ function renderRoute(path) {
 }
 for(const [path,title] of [
 ['/','Nie ma'],['/shop','Wybierz swój ślad.'],['/collection','Wybierz swój ślad.'],['/process','Od kawałka płótna.'],['/atelier','Od kawałka płótna.'],['/journal','Pomiędzy szwami.'],
-['/cart','Twoje wybory.'],['/checkout','Twoja para. Twoje dane.'],['/order-confirmation','Twoje potwierdzenie.'],['/faq','Dobrze wiedzieć.'],['/size-guide','Zacznij od miarki.'],['/contact','Porozmawiajmy o parze.'],['/terms','Warunki zamówienia.'],['/privacy','Twoja prywatność.'],['/shipping-returns','Dostawa i zwroty.'],
-['/admin','Twoja pracownia.'],['/track','Od ustaleń do wysyłki.'],['/newsletter','Twój wybór wiadomości.'],['/personalize/botanika','Para według Twoich wymiarów.'],
+['/cart','Twoje wybory.'],['/checkout','Twoja para. Twoje dane.'],['/order-confirmation','Twoje potwierdzenie.'],['/faq','Dobrze wiedzieć.'],['/size-guide','Zmierz. Sprawdź. Zapisz.'],['/contact','Porozmawiajmy o parze.'],['/terms','Warunki zamówienia.'],['/privacy','Twoja prywatność.'],['/shipping-returns','Dostawa i zwroty.'],
+['/admin','Twoja pracownia.'],['/track','Wszystkie ustalenia. Jedno miejsce.'],['/newsletter','Twój wybór wiadomości.'],['/personalize/botanika','Para według Twoich wymiarów.'],
 ...garments.map(g=>['/shop/'+g.slug,g.name]),...garments.map(g=>['/collection/'+g.slug,g.name]),...entries.map(e=>['/journal/'+e.slug,e.title]),
 ...['/404','/unknown','/shop/unknown','/journal/unknown'].map(p=>[p,'Ta strona się spruła.'])
 ]) test('Complete static document: '+path,()=>{
