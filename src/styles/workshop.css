@@ -1,0 +1,60 @@
+/* Transactional tools extend the existing white product stages and dark chrome. */
+.quick-trigger { width:100%; margin-top:1rem; color:var(--charcoal); border-color:var(--line); min-height:44px; }
+.quick-dialog { position:fixed; width:min(1100px,calc(100% - 2rem)); max-height:calc(100svh - 2rem); margin:auto; padding:1.5rem; border-radius:18px; overflow:auto; }
+.quick-dialog::backdrop { background:rgba(12,13,16,.8); }
+.quick-grid { display:grid; grid-template-columns:1fr 1fr; gap:2rem; }
+.tool-heading { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1.5rem; }
+.tool-heading h2 { font-size:2.5rem; }
+.tool-heading button { flex:none; }
+.quick-dialog .product-gallery { background:var(--canvas); color:var(--charcoal); padding:.5rem; align-self:start; }
+.quick-dialog .product-gallery .photo-caption { color:var(--muted); }
+.quick-dialog .product-gallery :focus-visible { outline-color:var(--charcoal); }
+.quick-dialog .size-options input:checked + span { background:var(--accent); color:var(--charcoal); border-color:var(--accent); }
+.quick-dialog .size-options input:focus-visible + span { outline-color:var(--accent); }
+.quick-dialog .field, .size-assistant .field, .admin-page .field, .tool-reading .field { font-size:1rem; }
+.quick-dialog .btn { margin-top:1rem; }
+.product-gallery video, .admin-page video { width:100%; max-height:480px; margin-top:1rem; background:var(--night); }
+.size-assistant { margin-top:1.5rem; }
+.size-assistant form { margin-top:1rem; }
+.size-assistant [role=status] { margin-block:1rem; }
+.measure-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:1rem; align-items:end; }
+.tool-reading > *, .admin-login { width:100%; max-width:760px; margin-inline:auto; }
+.tool-reading h2 { font-size:2.5rem; }
+.tracking-page > * { max-width:1000px; margin-inline:auto; }
+.tracking-summary { padding-bottom:2rem; border-bottom:1px solid var(--line); }
+.tracking-summary h2 { font-size:3rem; margin-bottom:1rem; }
+.order-timeline { list-style:none; padding-left:0; margin-block:2rem; }
+.order-timeline > li { position:relative; border-left:2px solid var(--line); padding:0 0 2rem 1.5rem; margin-left:.5rem; }
+.order-timeline > li::before { content:''; position:absolute; left:-7px; top:.25rem; width:12px; height:12px; border:2px solid var(--charcoal); border-radius:50%; background:var(--canvas); }
+.order-timeline > li[data-recorded=true]::before { background:var(--charcoal); }
+.order-timeline > li[aria-current=step] h3 { text-decoration:underline; text-underline-offset:.3em; }
+.order-timeline h3 { margin-bottom:.75rem; }
+.order-timeline time { font-size:.875rem; color:var(--muted); }
+.progress-photos { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:1rem; margin-top:1rem; max-width:760px; }
+.progress-photo { width:100%; max-height:360px; object-fit:contain; background:var(--ecru); }
+.admin-nav { display:flex; flex-wrap:wrap; gap:.5rem; margin-bottom:2rem; }
+.admin-nav button[aria-pressed=true] { color:var(--canvas); background:var(--charcoal); }
+.admin-content { min-width:0; }
+.admin-card { padding:1.5rem; border:1px solid var(--line); margin-block:1rem; border-radius:8px; }
+.admin-card summary { font-size:1.1rem; }
+.admin-card form { margin-top:1.5rem; }
+.admin-card h3 { margin-block:1.5rem 1rem; }
+.admin-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+.admin-grid textarea { min-height:88px; }
+.media-editor { display:grid; grid-template-columns:100px 1fr 1fr; gap:1rem; border-bottom:1px solid var(--line); padding-block:1rem; align-items:start; }
+.media-editor img { max-height:150px; object-fit:contain; }
+.integration-list > div { padding-block:1rem; border-bottom:1px solid var(--line); }
+.integration-list dt { font-weight:bold; }
+.integration-list dd { margin:0; }
+.order-event { border-top:1px solid var(--line); padding-block:1rem; }
+@media(max-width:767px) {
+ .quick-grid,.admin-grid,.media-editor { grid-template-columns:1fr; }
+ .quick-dialog { width:calc(100% - 1rem); padding:1rem; max-height:calc(100svh - 1rem); }
+ .quick-dialog .product-gallery .plate { max-height:50svh; }
+ .tool-heading { align-items:flex-start; }
+ .tool-heading h2 { font-size:1.8rem; }
+ .admin-card { padding:1rem; }
+ .media-editor img { max-width:180px; }
+ .tracking-summary h2 { font-size:2rem; }
+}
+

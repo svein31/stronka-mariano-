@@ -21,12 +21,13 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <CapabilitiesProvider>
-        <CartProvider>
-          <StoreProvider><InteractionProvider><TransitionProvider><App /></TransitionProvider></InteractionProvider></StoreProvider>
-        </CartProvider>
+        <StoreProvider>
+          <CartProvider><InteractionProvider><TransitionProvider><App /></TransitionProvider></InteractionProvider></CartProvider>
+        </StoreProvider>
       </CapabilitiesProvider>
     </BrowserRouter>
   </StrictMode>,
 )
 
 import './styles/cinematic.css'
+import './styles/workshop.css'

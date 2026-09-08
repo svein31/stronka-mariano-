@@ -68,7 +68,7 @@ export function Checkout() {
  <fieldset disabled={busy||!!pending}><legend>03 / Ustalenia</legend><label className="field">Uwagi (opcjonalnie)<textarea name="notes" value={customer.notes} maxLength={1000} onChange={e=>setCustomer(c=>({...c,notes:e.target.value}))}/></label>
  <label className="check"><input type="checkbox" required checked={acknowledged} onChange={e=>setAcknowledged(e.target.checked)}/><span>Zapoznałem/am się z <Link to="/terms">warunkami zamówienia</Link>, <Link to="/shipping-returns">dostawą i zwrotami</Link> oraz <Link to="/privacy">informacją o prywatności</Link>. Rozumiem, że zapis wymaga potwierdzenia pracowni i nie pobiera płatności.</span></label></fieldset>
  <button className="btn" disabled={busy||!config||(!quote&&!pending)}>{busy?'Zapisujemy…':pending?'Ponów zapis tej samej próby →':'Zapisz zamówienie bez płatności →'}</button>
- <p className="small">Potwierdzenie będzie dostępne w tej karcie przeglądarki. Automatyczna wysyłka e-mail nie jest jeszcze aktywna.</p>
+ <p className="small">Potwierdzenie będzie dostępne w tej karcie. {config?.emailEnabled?'Dostęp do realizacji wyślemy również e-mailem.':'Wysyłka e-mail wymaga konfiguracji poczty przez pracownię.'}</p>
  </form><aside>{quote?<OrderSummary quote={quote}/>:<p role="status">Sprawdzamy ceny i dostawę…</p>}</aside>
  </>}
  </section></>
@@ -82,5 +82,5 @@ export function OrderConfirmation() {
  <section className="shell section receipt solid-stage">{!key?<p>Nie ma zapisanego potwierdzenia. <Link to="/shop">Wróć do kolekcji</Link>.</p>:error?<p role="alert">{error} <button onClick={()=>setAttempt(n=>n+1)}>Ponów</button></p>:!receipt?<p role="status">Pobieramy zapis…</p>:<>
  {receipt.demo&&<p className="notice">Zamówienie demonstracyjne — nie trafi do realizacji.</p>}<p className="small">Numer: {receipt.id}</p><p>Kontakt: {receipt.customer.name} · {receipt.customer.email}</p>
  {receipt.customer.street&&<p>Dostawa: {receipt.customer.street}, {receipt.customer.postalCode} {receipt.customer.city}</p>}
- <OrderSummary quote={receipt.quote}/><p>Status: oczekuje na uzgodnienie. To potwierdzenie zapisu, nie potwierdzenie zawarcia umowy.</p><button className="btn btn--outline" onClick={()=>window.print()}>Drukuj / zapisz jako PDF</button><p><Link to="/shop">Wróć do spodni →</Link></p></>}</section></>
+ <Link className="btn" to="/track" state={key}>Zobacz realizację zamówienia</Link><OrderSummary quote={receipt.quote}/><p>Status: oczekuje na uzgodnienie. To potwierdzenie zapisu, nie potwierdzenie zawarcia umowy.</p><button className="btn btn--outline" onClick={()=>window.print()}>Drukuj / zapisz jako PDF</button><p><Link to="/shop">Wróć do spodni →</Link></p></>}</section></>
 }

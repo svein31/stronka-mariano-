@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {test,after} from 'node:test'
+import {test,after,beforeEach} from 'node:test'
 import {mkdtemp,rm} from 'node:fs/promises'
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
@@ -12,6 +12,7 @@ const directory=await mkdtemp(join(tmpdir(),'workshop-test-')),path=join(directo
 const db=openDatabase(path),config=getConfig({}),app=createApp({db,config})
 await new Promise(resolve=>app.listen(0,'127.0.0.1',resolve))
 const base='http://127.0.0.1:'+app.address().port
+beforeEach(()=>db.prepare('DELETE FROM rate_limits').run())
 after(async()=>{await new Promise(resolve=>app.close(resolve));db.close();await rm(directory,{recursive:true,force:true})})
 async function request(route,body,extra={}) {
  const res=await fetch(base+route,{method:body===undefined?'GET':'POST',headers:{Origin:'http://localhost:5173','Content-Type':'application/json',...extra},body:body===undefined?undefined:JSON.stringify(body)})
@@ -113,7 +114,7 @@ test('Rate limiter ignores untrusted forwarding headers',async()=>{
  try {
   const url='http://127.0.0.1:'+limited.address().port+'/api/health'
   assert.equal((await fetch(url)).status,200);assert.equal((await fetch(url)).status,200)
-  const third=await fetch(url,{headers:{'X-Forwarded-For':'198.51.100.1'}});assert.equal(third.status,429);assert.equal(third.headers.get('retry-after'),'60')
+  const third=await fetch(url,{headers:{'X-Forwarded-For':'198.51.100.1'}});assert.equal(third.status,429);assert.equal(third.headers.get('retry-after'),'600')
  } finally {await new Promise(resolve=>limited.close(resolve))}
 })
 test('Live mode fails closed until identity, origin and policies are configured',()=>{

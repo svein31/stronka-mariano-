@@ -63,7 +63,7 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
       if (traveling) return
       if (to === location.pathname + location.search) return
 
-      if (reducedMotion || ['/cart','/checkout','/order-confirmation'].some(path => to.startsWith(path) || location.pathname.startsWith(path))) {
+      if (reducedMotion || ['/cart','/checkout','/order-confirmation','/admin','/track','/personalize','/newsletter'].some(path => to.startsWith(path) || location.pathname.startsWith(path))) {
         navigate(to)
         return
       }
