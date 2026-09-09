@@ -2,28 +2,29 @@ import {useEffect,useRef,useState,type CSSProperties,type FormEvent} from 'react
 import {Link,useParams} from 'react-router-dom'
 import {useEditorial,type EditorialDocument,type EditorialSection} from '../state/editorial'
 import {useProducts} from '../state/store'
-import {useCapabilities,useVisualPolicy} from '../lib/capabilities'
-import {useGSAP} from '@gsap/react'
-import gsap from 'gsap'
+import {useCapabilities} from '../lib/capabilities'
 import {useDocumentTitle,SiteLink} from '../components/Transition'
 import {ProductCard,PageHeading,NotFound} from './Pages'
 import {CraftChapter} from '../components/Cinematic'
 import {Rise} from '../components/ScrollMotion'
 import {post} from '../lib/api'
 import brand from '../../shared/brand.json'
+import {mediaSlots} from '../lib/media'
 
 export function EditorialImage({image,mobileImage,alt,eager=false}:{image?:string;mobileImage?:string;alt?:string;eager?:boolean}){
+ return <EditorialPhoto key={(image||'')+'|'+(mobileImage||'')} image={image} mobileImage={mobileImage} alt={alt} eager={eager}/>
+}
+function EditorialPhoto({image,mobileImage,alt,eager=false}:{image?:string;mobileImage?:string;alt?:string;eager?:boolean}){
  const [failed,setFailed]=useState(false)
- useEffect(()=>setFailed(false),[image,mobileImage])
- if(!image||failed)return <div className="editorial-image-fallback" role="img" aria-label={alt||'Zdjęcie niedostępne'}>MARIANO</div>
- return <picture>{mobileImage&&<source media="(max-width: 640px)" srcSet={mobileImage}/>}<img src={image} alt={alt||''} width="1086" height="1448" loading={eager?'eager':'lazy'} fetchPriority={eager?'high':'auto'} decoding="async" onError={()=>setFailed(true)}/></picture>
+ const [originalOnly,setOriginalOnly]=useState(false),[attempt,setAttempt]=useState(0)
+ const slot=mediaSlots.find(slot=>image==='/media/'+slot+'.webp')
+ if(!image||failed)return <div className="editorial-image-fallback"><span role="img" aria-label={alt||'Zdjęcie niedostępne'}>MARIANO</span>{image&&eager&&<button className="btn btn--light" onClick={()=>{setFailed(false);setOriginalOnly(true);setAttempt(n=>n+1)}}>Wczytaj zdjęcie ponownie</button>}</div>
+ return <picture key={attempt+'|'+originalOnly}>{mobileImage&&!originalOnly&&<source media="(max-width: 640px)" srcSet={mobileImage}/>}<img src={image} srcSet={slot&&!originalOnly?`/media/${slot}-480.webp 480w, /media/${slot}-960.webp 960w, ${image} ${slot==='process'?1440:1086}w`:undefined} sizes={eager?'100vw':'(max-width: 800px) 100vw, 50vw'} alt={alt||''} width={slot==='process'?1440:1086} height={slot==='process'?960:1448} loading={eager?'eager':'lazy'} fetchPriority={eager?'high':'auto'} decoding="async" onError={()=>{if(!originalOnly&&(mobileImage||slot))setOriginalOnly(true);else setFailed(true)}}/></picture>
 }
 export function EditorialHero({document:d,preview=false}:{document:EditorialDocument;preview?:boolean}){
  const {reducedMotion}=useCapabilities(),ref=useRef<HTMLVideoElement>(null)
- const hero=useRef<HTMLElement>(null),policy=useVisualPolicy()
- useGSAP(()=>{if(preview||!policy.parallax||!hero.current)return;const media=gsap.matchMedia();media.add('(min-width: 64rem) and (min-height: 700px)',()=>{if(!policy.pin)return;gsap.timeline({scrollTrigger:{trigger:hero.current,start:'top top',end:'+=65%',pin:true,scrub:.65,invalidateOnRefresh:true}}).to('.editorial-hero__image',{scale:1.1,yPercent:4,ease:'none'},0).to('.editorial-hero__copy',{y:-32,ease:'none'},0)});media.add('(max-width: 63.999rem), (max-height: 699px)',()=>{gsap.fromTo('.editorial-hero__image',{scale:1.08,yPercent:-2},{scale:1.14,yPercent:4,ease:'none',scrollTrigger:{trigger:hero.current,start:'top top',end:'bottom top',scrub:.5}})});return()=>media.revert()},{scope:hero,dependencies:[preview,policy.parallax,policy.pin,d.id,d.image],revertOnUpdate:true})
  useEffect(()=>{const video=ref.current;if(!video||reducedMotion||preview||!('IntersectionObserver' in window))return;const observer=new IntersectionObserver(([entry])=>{if(entry.isIntersecting&&globalThis.document.visibilityState==='visible')void video.play().catch(()=>{});else video.pause()});observer.observe(video);const pause=()=>{if(globalThis.document.hidden)video.pause()};globalThis.document.addEventListener('visibilitychange',pause);return()=>{observer.disconnect();video.pause();globalThis.document.removeEventListener('visibilitychange',pause)}},[d.video,reducedMotion,preview])
- return <header ref={hero} className="editorial-hero" data-theme={d.theme||'dark'} data-height={d.height||'large'} data-align={d.align||'left'} style={{'--hero-overlay':(d.overlay??35)/100,'--focal-x':(d.focalX??50)+'%','--focal-y':(d.focalY??50)+'%'} as CSSProperties}>
+ return <header className="editorial-hero" data-theme={d.theme||'dark'} data-height={d.height||'large'} data-align={d.align||'left'} style={{'--hero-overlay':(d.overlay??35)/100,'--focal-x':(d.focalX??50)+'%','--focal-y':(d.focalY??50)+'%'} as CSSProperties}>
  <div className="editorial-hero__image"><EditorialImage image={d.image} mobileImage={d.mobileImage} alt={d.alt} eager/>{d.video&&!reducedMotion&&!preview&&<video ref={ref} muted playsInline controls preload="metadata" poster={d.image} src={d.video} aria-label="Film kolekcji"/>}</div>
  <div className="editorial-hero__copy"><p className="eyebrow">{d.eyebrow||'MARIANO / COLLECTION'}</p><h1 id={preview?undefined:'route-title'} tabIndex={-1}>{d.title}</h1>{d.description&&<p>{d.description}</p>}{d.ctaHref&&d.ctaLabel&&<SiteLink className="editorial-link" to={d.ctaHref}>{d.ctaLabel}</SiteLink>}</div></header>
 }

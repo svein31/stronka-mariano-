@@ -1,6 +1,4 @@
 .skeleton { position:relative; overflow:hidden; background:#e3e3e0; isolation:isolate; }
-.skeleton::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent); transform:translateX(-100%); animation:skeleton-shimmer 1.3s linear infinite; will-change:transform; pointer-events:none; }
-@keyframes skeleton-shimmer { from { transform:translateX(-100%); } to { transform:translateX(100%); } }
 .sheet-handle { display:none; }
 .editorial-link,.product-card__detail { transition:transform .22s ease,opacity .22s ease; }
 @media(hover:hover) and (pointer:fine) {
@@ -12,9 +10,6 @@
  :where(button,.btn,.editorial-link,.quick-trigger) { transition:transform 100ms cubic-bezier(.2,0,0,1),opacity 100ms cubic-bezier(.2,0,0,1); }
  :where(button,.btn,.editorial-link,.quick-trigger):active { transform:scale(.97); opacity:.9; }
  *,*::before,*::after { backdrop-filter:none!important; -webkit-backdrop-filter:none!important; box-shadow:none!important; }
- .nav { top:0; transition:transform .22s cubic-bezier(.2,0,0,1); transform:translateY(0); }
- .nav.nav--scroll-hidden { transform:translateY(-100%); }
- .nav:focus-within { transform:translateY(0); }
  .drawer.mobile-sheet { inset:auto 0 0; width:100%; max-width:none; height:min(88svh,55rem); border-radius:1rem 1rem 0 0; transform:translateY(100%); transition:transform .3s cubic-bezier(.32,.72,0,1); visibility:visible; opacity:1; padding:1rem 1.25rem max(1.25rem,env(safe-area-inset-bottom)); }
  .drawer.mobile-sheet[data-open=true] { transform:translateY(0); }
  .drawer.mobile-sheet.is-dragging { transition:none; }
@@ -22,16 +17,7 @@
  .sheet-handle::before { content:''; display:block; width:3rem; height:4px; border-radius:2px; background:currentColor; margin:auto; opacity:.4; }
  .drawer.mobile-sheet .drawer__body { overscroll-behavior:contain; }
 }
-/* Snapshot dimensions are fixed for the duration; JS interpolates transform only. */
-::view-transition-group(hero-image) { animation:none; }
-::view-transition-old(hero-image),::view-transition-new(hero-image) { animation-duration:.32s; animation-timing-function:cubic-bezier(.2,0,0,1); width:100%; height:100%; object-fit:cover; }
-::view-transition-old(root) { animation:route-out .16s ease both; }
-::view-transition-new(root) { animation:route-in .22s ease both; }
-@keyframes route-out { to { opacity:0; } }
-@keyframes route-in { from { opacity:0; } to { opacity:1; } }
 @media(prefers-reduced-motion:reduce) {
- .skeleton::after { animation:none; display:none; }
  .nav,.drawer.mobile-sheet,:where(button,.btn,.editorial-link,.quick-trigger) { transition:none!important; }
  :where(button,.btn,.editorial-link,.quick-trigger):active { transform:none; opacity:1; }
- ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*) { animation:none!important; }
 }

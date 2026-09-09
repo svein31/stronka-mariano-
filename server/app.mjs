@@ -88,10 +88,19 @@ export function createApp({db,config,dist=resolve('dist'),rateLimit=120,env=proc
         if(extname(decoded) || decoded.startsWith('/media/') || decoded.startsWith('/assets/')) throw new HttpError(404,'Brak pliku.')
         path=resolve(dist,'index.html')
       }
+      const info=await stat(path).catch(()=>{throw new HttpError(404,'Najpierw zbuduj frontend: npm run build.')})
+      const etag='W/"'+info.size.toString(16)+'-'+info.mtimeMs.toString(16)+'"'
+      // Only content-hashed build assets can be cached indefinitely.
+      const immutable=decoded.startsWith('/assets/')&&/-[A-Za-z0-9_-]{8,}\.(js|css)$/.test(decoded)
+      const headers={'Content-Type':mime[extname(path)]||'application/octet-stream','Cache-Control':immutable?'public, max-age=31536000, immutable':'no-cache','ETag':etag}
+      if(req.headers['if-none-match']?.split(',').map(v=>v.trim()).includes(etag)){
+        res.writeHead(304,headers);res.end();return
+      }
+      if(req.method==='HEAD'){res.writeHead(200,headers);res.end();return}
       let data
       try {data=await readFile(path)} catch {throw new HttpError(404,'Najpierw zbuduj frontend: npm run build.')}
-      res.writeHead(200,{'Content-Type':mime[extname(path)]||'application/octet-stream','Cache-Control':path.endsWith('.html')?'no-cache':'public, max-age=3600'})
-      res.end(req.method==='HEAD'?undefined:data)
+      res.writeHead(200,headers)
+      res.end(data)
     } catch(error) {
       const status=error instanceof HttpError?error.status:500
       if(status===429){res.setHeader('Retry-After','600');audit(db,'rate_limited',requestId)}

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import {test,after,beforeEach} from 'node:test'
-import {mkdtemp,rm} from 'node:fs/promises'
+import {mkdtemp,rm,mkdir,writeFile} from 'node:fs/promises'
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import {randomBytes,randomUUID} from 'node:crypto'
@@ -20,6 +20,20 @@ async function request(route,body,extra={}) {
 }
 const line={slug:'botanika',size:'M',variant:'Kobalt / ecru',quantity:2}
 const customer={name:'Test Person',email:'test@example.com',street:'Testowa 1',postalCode:'00-001',city:'Warszawa',country:'PL',notes:''}
+test('Static caching revalidates changed photographs and keeps missing assets out of the SPA',async()=>{
+ const dist=join(directory,'static-fixture');await mkdir(join(dist,'assets'),{recursive:true});await mkdir(join(dist,'media'))
+ await writeFile(join(dist,'index.html'),'<h1>Store</h1>');await writeFile(join(dist,'assets','entry-abcd1234.js'),'export {}');await writeFile(join(dist,'media','photo.webp'),'fixture-photo')
+ const server=createApp({db,config,dist});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin='http://127.0.0.1:'+server.address().port
+ try {
+  const image=await fetch(origin+'/media/photo.webp');assert.equal(image.status,200);assert.equal(image.headers.get('cache-control'),'no-cache');const etag=image.headers.get('etag');assert.ok(etag)
+  const cached=await fetch(origin+'/media/photo.webp',{headers:{'If-None-Match':etag}});assert.equal(cached.status,304);assert.equal(await cached.text(),'')
+  await writeFile(join(dist,'media','photo.webp'),'updated-photograph');const changed=await fetch(origin+'/media/photo.webp',{headers:{'If-None-Match':etag}});assert.equal(changed.status,200);assert.notEqual(changed.headers.get('etag'),etag)
+  const asset=await fetch(origin+'/assets/entry-abcd1234.js');assert.match(asset.headers.get('cache-control'),/immutable/)
+  const head=await fetch(origin+'/media/photo.webp',{method:'HEAD'});assert.equal(head.status,200);assert.equal(await head.text(),'')
+  const route=await fetch(origin+'/shop');assert.equal(route.headers.get('cache-control'),'no-cache');assert.match(await route.text(),/Store/)
+  assert.equal((await fetch(origin+'/media/missing.webp')).status,404);assert.equal((await fetch(origin+'/assets/missing.js')).status,404)
+ }finally{await new Promise(resolve=>server.close(resolve))}
+})
 async function orderBody(overrides={}) {
  const selection={lines:[line],shipping:'courier'}
  const quote=await request('/api/quote',selection)

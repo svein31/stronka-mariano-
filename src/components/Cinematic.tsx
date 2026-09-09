@@ -27,7 +27,7 @@ export function CinematicHero() {
     return ()=>media.revert()
   },{scope:ref,dependencies:[policy.pin,policy.parallax],revertOnUpdate:true})
   return <section className="cinematic-hero" ref={ref} aria-labelledby="route-title">
-    <div className="hero-depth"><PhotoPlate slot="process" alt="Dłonie odbijające kobaltowy roślinny wzór na jasnych spodniach." eager/></div>
+    <div className="hero-depth"><PhotoPlate retryable slot="process" alt="Dłonie odbijające kobaltowy roślinny wzór na jasnych spodniach." eager/></div>
     <div className="hero-atmosphere" aria-hidden="true"/>
     <div className="shell hero-content">
       <div className="hero-copy photo-copy"><p className="eyebrow">Autorski projekt. Własne zasady.</p>
@@ -50,7 +50,7 @@ export function CraftChapter({title,description}:{title?:string;description?:str
     media.add('(min-width: 64rem) and (min-height: 700px)',()=>{
       if(!policy.pin)return
       gsap.timeline({scrollTrigger:{trigger:ref.current,start:'top top',end:'+=85%',pin:true,scrub:.6,invalidateOnRefresh:true}})
-        .fromTo('.craft-depth',{z:-100,rotateY:-5},{z:40,rotateY:3,y:-30,ease:'none'},0)
+        .fromTo('.craft-depth',{scale:1.08,yPercent:-2},{scale:1.12,yPercent:2,ease:'none'},0)
         .fromTo('.craft-word',{y:40,opacity:.45},{y:0,opacity:1,stagger:.18,ease:'none'},0)
     })
     media.add('(max-width: 63.999rem), (max-height: 699px)',()=>{
@@ -61,7 +61,7 @@ export function CraftChapter({title,description}:{title?:string;description?:str
     return ()=>media.revert()
   },{scope:ref,dependencies:[policy.pin,policy.parallax],revertOnUpdate:true})
   return <section id="process" className="craft-chapter" ref={ref}>
-    <div className="craft-depth"><PhotoPlate slot="botanika" alt="Koncepcyjny projekt wzoru Botanika."/><ClothStudy/></div>
+    <div className="craft-depth"><PhotoPlate retryable slot="botanika" alt="Koncepcyjny projekt wzoru Botanika."/><ClothStudy/></div>
     <div className="shell craft-content"><div className="photo-copy"><p className="eyebrow">02 / Siła tkwi w szczególe</p><h2><span className="craft-word">{title||'Własny wzór.'}</span><br/><em className="craft-word">Twój ślad.</em></h2><p>{description||'Ręcznie tworzymy designy. Gotowe spodnie produkują nasi partnerzy w Bangladeszu.'}</p><MagneticLink to="/process">Jak powstają ↗</MagneticLink></div><p className="small chapter-note">Ilustracja koncepcyjna i studium tkaniny 3D.</p></div>
   </section>
 }

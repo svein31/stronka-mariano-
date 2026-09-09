@@ -10,7 +10,6 @@ import { useFocusTrap } from '../lib/focus'
 import { useCart } from '../state/cart'
 import { SiteLink, useTransitioning } from './Transition'
 import brand from '../../shared/brand.json'
-import {useScrollAwareHeader,useWAAPI} from '../lib/motion-layers'
 import {useTravel} from './Transition'
 import { ROUTES,EXPLORE_ROUTES } from '../routes/manifest'
 
@@ -20,9 +19,8 @@ export function Nav() {
   const location = useLocation()
   const traveling = useTransitioning()
   const { scroll, reducedMotion } = useCapabilities()
-  const { count, setOpen, open:bagOpen } = useCart()
-  const travel=useTravel(),badge=useRef<HTMLSpanElement>(null)
-  useWAAPI(badge,count)
+  const { count, setOpen } = useCart()
+  const travel=useTravel()
 
   const shell = useRef<HTMLElement>(null)
   const progress = useRef<HTMLDivElement>(null)
@@ -30,7 +28,6 @@ export function Nav() {
   const toggle = useRef<HTMLButtonElement>(null)
   const [open, setOpenPanel] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  useScrollAwareHeader(shell,open||bagOpen||traveling)
 
   useEffect(() => {
     const trigger = ScrollTrigger.create({
@@ -104,7 +101,7 @@ export function Nav() {
             aria-haspopup="dialog"
           >
             Koszyk
-            <span ref={badge} className="nav__bag-count" aria-hidden="true">
+            <span className="nav__bag-count" aria-hidden="true">
               {String(count).padStart(2, '0')}
             </span>
             <span className="sr-only">

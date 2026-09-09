@@ -173,7 +173,13 @@ select option { background: var(--night); color: var(--canvas); }
 .hero-provenance { font-size: .75rem; background: var(--night); padding: .4rem .7rem; width: fit-content; margin-top: 1.5rem; }
 .craft-chapter { position: relative; isolation: isolate; min-height: 95svh; perspective: 1100px; overflow: clip; background: var(--night); }
 .craft-depth .plate__media { object-position: center; }
-.craft-depth .cloth-study { inset: 0 0 0 40%; opacity: .85; }
+/* Blend the full-width study into the photograph, without a cut at 40%. */
+.craft-depth .cloth-study {
+  inset: 0;
+  opacity: .28;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 30%, #000 70%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 30%, #000 70%, transparent);
+}
 .craft-content { min-height: 95svh; position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: center; align-items: flex-end; padding-block: 5rem; }
 .craft-content .photo-copy { max-width: 680px; }
 .craft-content h2 { font-size: clamp(2.7rem,5vw,5.5rem); margin-bottom: 1.5rem; }
